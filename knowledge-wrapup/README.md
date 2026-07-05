@@ -88,3 +88,6 @@ knowledge-wrapup/
   the skill announces any domain it adds.
 - After modifying SKILL.md, re-run the conversations in `evals/` and compare
   outputs — that's the regression check against capability drift.
+- Versioning: SemVer in SKILL.md frontmatter (`version:`) + CHANGELOG.md.
+  Bump MINOR for new behavior rules, PATCH for wording fixes, MAJOR if card
+  or pipeline compatibility breaks; tag releases in git.
