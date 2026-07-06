@@ -48,8 +48,16 @@ Section rules:
 
 - **Example / Steps**: prefer the actual example from the source conversation —
   concrete beats generic.
-- **Related**: `[[wikilinks]]` to associated topics. Linking to notes that do not
-  exist yet is deliberate — `obsidian unresolved` turns them into a to-learn list.
+- **Related**: `[[wikilinks]]` to associated topics. Linking to notes that do
+  not exist yet is deliberate — `obsidian unresolved` turns them into a
+  to-learn list. But **links follow content, never the other way around**: a
+  dangling link is a promise that a note passing the three gates could exist
+  there. Do not link out of habit to project-specific machinery, to
+  tool-overview placeholders ("[[obsidian]]" from an Obsidian-related note),
+  or to hub pages nobody asked for. Dispositions for an existing dangling
+  link: fill it when real content arrives; leave it as a signpost; delete it
+  once it turns out the "content" would be project docs or trivia — never
+  write a thin note just to clear the list.
 - **References** (optional, 0–3 links): official docs and high-quality
   tutorials, formatted as an **ordered list** (`1.`, `2.`, …), each with a
   one-line note on what it covers. **Never invent a URL.** Only include links

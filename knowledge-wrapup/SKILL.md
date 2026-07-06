@@ -1,6 +1,6 @@
 ---
 name: knowledge-wrapup
-version: 1.4.0
+version: 1.5.0
 description: >
   Extract reusable knowledge from the current conversation (or from a user-provided
   file) into knowledge cards, then integrate them into the user's Obsidian knowledge

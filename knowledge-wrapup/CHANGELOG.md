@@ -9,6 +9,16 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.5.0] — 2026-07-07
+
+### Added
+- "Links follow content" rule for Related wikilinks: a dangling link must
+  promise a three-gate-passing note. No habitual links to project machinery,
+  tool-overview placeholders, or unrequested hub pages. Dangling-link
+  dispositions codified: fill / leave as signpost / delete — never write a
+  thin note just to clear the unresolved list. (Distilled from three real
+  cleanups: knowledge-base-automation, the obsidian MOC proposal, [[obsidian]].)
+
 ## [1.4.0] — 2026-07-05 (late evening) / 2026-07-06 (early)
 
 ### Added
