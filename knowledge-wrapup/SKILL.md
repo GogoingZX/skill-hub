@@ -1,6 +1,6 @@
 ---
 name: knowledge-wrapup
-version: 1.5.0
+version: 1.7.0
 description: >
   Extract reusable knowledge from the current conversation (or from a user-provided
   file) into knowledge cards, then integrate them into the user's Obsidian knowledge
@@ -62,7 +62,14 @@ A candidate is extracted only if it passes **all three**:
 
 1. **Reusable** — still useful in a different project six months from now.
 2. **Non-trivial** — something the user could not have written down before the
-   conversation. Common knowledge fails this gate.
+   conversation. Common knowledge fails this gate — with one exception:
+   **well-documented fundamentals** (textbook / official-doc material) pass
+   when the conversation shows personal friction evidence — the user asked
+   repeatedly, misunderstood, or had learned-and-forgotten it. "Looks core"
+   is not evidence; "it stalled the user" is. Such notes are tagged
+   `fundamentals`, filed by subject domain (e.g. technology/python — never a
+   generic "learning" folder), and written around the friction point (what
+   confused the user and why), never as tutorial re-narration.
 3. **Self-contained** — understandable without the conversation's context.
 
 Explicitly excluded, regardless of gates: project-specific decisions and paths,
@@ -192,3 +199,9 @@ End with a summary in the chat, containing:
 - All generated English is written first and completely; translation (if enabled)
   is done afterwards as a whole, natural and idiomatic, never literal. Details in
   `references/integration-rules.md`.
+- **The spec is binding during execution — no self-authorized deviations.**
+  If a rule feels wrong mid-run, follow it anyway, flag the friction in the
+  report, and propose a change; the change happens only after the user
+  approves, never before. Deviating first and legitimizing afterwards is the
+  exact degradation pattern this skill's defenses exist to prevent — and the
+  executor itself is a degradation vector those defenses cannot script away.

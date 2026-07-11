@@ -9,6 +9,46 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.8.1] — 2026-07-11
+
+### Changed
+- Example/Steps rule (card-spec): examples are written in best-practice form
+  from the start; load-bearing practices are named explicitly with what they
+  prevent. Trigger: the decorators note initially shipped its example without
+  `@functools.wraps` — the canonical practice was missing precisely where a
+  beginner would copy from (user proposal, approved 2026-07-11).
+
+## [1.8.0] — 2026-07-11
+
+### Changed
+- Gate 2 (non-trivial) gains the **fundamentals exception**: well-documented
+  textbook material passes when the conversation shows personal friction
+  evidence (repeated questions / misunderstanding / learned-and-forgotten);
+  such notes are tagged `fundamentals`, filed by subject domain (no generic
+  "learning" folders), and written around the friction point. Rationale
+  (user decision, 2026-07-11): one vault as SSOT beats a separate cheatsheet
+  layer whose read-time routing cost compounds; the friction requirement
+  keeps the signal-to-noise line versus official docs.
+
+## [1.7.0] — 2026-07-07
+
+### Added
+- Spec-governance ground rule (user-mandated after a real deviation): the
+  spec binds during execution; mid-run friction is flagged and proposed,
+  never self-resolved; rule changes require prior user approval. Trigger
+  incident: a diary section was written Chinese-only against the bilingual
+  convention, then a post-hoc rule change was offered — rejected.
+
+## [1.6.0] — 2026-07-07
+
+### Added
+- Code-presentation rule (layout rule 10): inline code only for short
+  fragments inside a sentence; anything multi-line, commented, or
+  copy-paste-ready gets a fenced code block — in the translation section too.
+  Code is language-neutral: duplicate blocks verbatim (comments may be
+  translated); never compress a block into inline code or replace it with a
+  "see the English section above" reference.
+
 ## [1.5.0] — 2026-07-07
 
 ### Added

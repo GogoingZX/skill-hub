@@ -47,7 +47,11 @@ Fixed English `##` headings. `## References` is optional; all others required.
 Section rules:
 
 - **Example / Steps**: prefer the actual example from the source conversation —
-  concrete beats generic.
+  concrete beats generic. Examples are written in **best-practice form from
+  the start** (never a naive version the reader must later unlearn); when a
+  practice is load-bearing — omitting it causes real failures — name it
+  explicitly and state what it prevents (e.g. `@functools.wraps` on a
+  decorator's wrapper).
 - **Related**: `[[wikilinks]]` to associated topics. Linking to notes that do
   not exist yet is deliberate — `obsidian unresolved` turns them into a
   to-learn list. But **links follow content, never the other way around**: a
@@ -124,7 +128,11 @@ Basic git workflow (add/commit).
    Fails gate 1 (reusable): project-specific action, meaningless elsewhere.
 2. **"Canvas means a surface you draw on."**
    Fails gate 2 (non-trivial) *if* that is all that was said. It passes only when
-   the conversation added real substance (e.g. `<canvas>` vs SVG trade-offs).
+   the conversation added real substance (e.g. `<canvas>` vs SVG trade-offs) —
+   or via the fundamentals exception (SKILL.md Step 2): personal friction
+   evidence in the conversation (repeated questions, a misunderstanding,
+   learned-and-forgotten) admits a textbook topic, tagged `fundamentals` and
+   written around the friction point.
 3. **"The user prefers concise answers."**
    Excluded category: preference — belongs to memory, not the knowledge base.
 4. **"As discussed above, combine that approach with the second option."**

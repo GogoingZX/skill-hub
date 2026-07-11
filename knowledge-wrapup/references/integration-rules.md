@@ -179,6 +179,14 @@ Optimize for scan-ability — the reader should get the structure at a glance:
 8. **No duplicate H1s.** The translation section's title is a bold line, its
    section headings are H3 — the document outline stays clean.
 9. **Separate diary topics with `---` rules** so each topic reads as a card.
+10. **Code blocks vs inline code**: inline code is only for short fragments
+    referenced inside a sentence (a command name, a flag, a path). Anything
+    multi-line, anything with explanatory comments, and any command meant to
+    be copy-pasted gets a fenced code block — **in the translation section
+    too**. Code is language-neutral: duplicate the block verbatim in the
+    translated section (comments may be translated); never compress a code
+    block into inline code or replace it with "see the English section
+    above" — both force the reader to jump or retype.
 
 ## Translation quality rules (when language ≠ "en")
 
