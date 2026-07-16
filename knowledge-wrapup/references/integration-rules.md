@@ -150,7 +150,16 @@ file is missing, create it fresh and mention that in the report.
 
 ## Presentation rules (notes and diary)
 
-Optimize for scan-ability — the reader should get the structure at a glance:
+Optimize for scan-ability — the reader should get the structure at a glance.
+Full typography rules live in `markdown-style.md` (binding); highlights:
+
+0. **Enumerations and steps are markdown lists** (U1) — never substitute
+   characters (①②③, •); soft-wrap constrains paragraphs, never list
+   structure (U2): one list item = one line, never fold a list into a
+   paragraph. **Translations mirror the source structure one-to-one**
+   (U7): list for list, table for table; headings rewritten idiomatically,
+   never word-stacked transliterations. Session war stories stay out of
+   notes (U6) — one evidence line max.
 
 1. **Comparisons and enumerations go in tables**, not prose lists: model/option
    comparisons, type vocabularies, decision shortcuts, do-vs-don't.
@@ -165,17 +174,22 @@ Optimize for scan-ability — the reader should get the structure at a glance:
 
 ## Layout rules (reading experience)
 
-5. **No walls of text.** Paragraphs ≤4 lines; multi-point content becomes
-   bullets with blank lines between blocks. The diary's Details field is a
-   bullet list, never one mega-paragraph.
+5. **No walls of text.** Keep paragraphs short (a few sentences); multi-point
+   content becomes bullets with blank lines between blocks. The diary's Details
+   field is a bullet list, never one mega-paragraph. "Short" means few
+   sentences, not few physical lines — see rule 7 on soft-wrapping.
 6. **Callouts for emphasis** (Obsidian renders them natively):
    `> [!summary]` — one-liner at the top of every note and every diary topic;
    `> [!warning]` — pitfalls and gotchas. Use sparingly; two per document is
    usually plenty.
-7. **Never hard-wrap CJK text mid-sentence.** Markdown renderers turn the
-   newline into a space, which corrupts Chinese sentences with stray gaps.
-   One Chinese paragraph/bullet = one physical line. (English may wrap at
-   ~80 chars — a newline renders as a space, which is correct there.)
+7. **Soft-wrap all prose — one paragraph/bullet = one physical line, for BOTH
+   English and CJK.** Do not hard-wrap prose at a fixed column. Two reasons:
+   (a) for CJK, a mid-sentence newline renders as a stray space and corrupts
+   the text; (b) even for English, hard breaks do NOT reflow to the window
+   width in Obsidian's Live Preview / Source view, so the text can't adapt to
+   the reader's pane. Let the editor soft-wrap. This applies to paragraphs,
+   list-item bodies, and callout content alike. (Code blocks, tables, and
+   headings are unaffected — they keep their own line structure.)
 8. **No duplicate H1s.** The translation section's title is a bold line, its
    section headings are H3 — the document outline stays clean.
 9. **Separate diary topics with `---` rules** so each topic reads as a card.

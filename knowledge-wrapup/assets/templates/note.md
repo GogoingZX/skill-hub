@@ -12,8 +12,10 @@ spec_version: 1
 > {one-line essence of the note — what the reader gets}
 
 {Body sections mirroring the card type — see references/card-spec.md.
-Keep paragraphs ≤4 lines; prefer bullets and tables; put pitfalls in
-`> [!warning]` callouts.}
+Keep paragraphs short (a few sentences); prefer bullets and tables; put
+pitfalls in `> [!warning]` callouts. Soft-wrap all prose: one paragraph /
+bullet / callout line = one physical line — never hard-wrap at a fixed column
+(English or CJK), so text reflows to the reader's window.}
 
 ## References
 

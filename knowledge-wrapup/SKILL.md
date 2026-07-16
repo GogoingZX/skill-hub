@@ -111,6 +111,9 @@ One card per surviving candidate, instantiated from the matching template in
 `assets/templates/` (card-concept, card-term, card-howto, card-gotcha,
 card-tutorial). Full schema, naming rules, and worked examples (including
 counter-examples of what NOT to extract): read `references/card-spec.md`.
+All output typography (lists, characters, Mermaid labels, math, bilingual
+structure) follows `references/markdown-style.md` — its machine-checkable
+subset is enforced by the validator below.
 
 Cards are English-only. External links go in the card's `## References` section —
 official docs and high-quality tutorials, 0–3 per card. **Never invent a URL**:
@@ -127,9 +130,20 @@ python3 scripts/validate_card.py <card-file>... --vault <vault_path>
 Fix and re-validate until clean. A card that fails validation must not proceed
 to integration.
 
+## Step 4b — Work card-by-card, not in batches
+
+For each surviving candidate, complete the full unit before starting the
+next: write the card → validate it → integrate its note (Step 5) → lint the
+note. Do NOT write all cards first and all notes afterwards — on large runs
+quality decays at the tail of each batch (observed 2026-07-16: translation
+defects concentrated in the later notes of a 14-card batched run). After a
+run of more than ~8 cards, additionally re-read the LAST THIRD of the
+translation sections against markdown-style U7 before reporting.
+
 ## Step 5 — Integrate
 
-Follow `references/integration-rules.md` for the exact note format, merge
+Follow `references/integration-rules.md` (and `references/markdown-style.md`
+for typography) for the exact note format, merge
 procedure per relation, conflict handling, translation quality rules, and
 TAXONOMY/INDEX maintenance. In brief:
 
@@ -141,8 +155,14 @@ TAXONOMY/INDEX maintenance. In brief:
 3. Conflicts go into the note's `## ⚠️ Pending verification` section with both
    claims and sources, and the note's frontmatter gets `status: disputed`.
 4. Merge card References into the note (dedupe by URL).
-5. Update `INDEX.md` (one line per note) and flip integrated cards to
-   `status: merged`.
+5. Update `INDEX.md` — one line per note, via
+   `scripts/update_index.py --vault … --note … --title … --summary …`
+   (idempotent: refreshes an existing line instead of duplicating) — and
+   flip integrated cards to `status: merged`.
+5b. Lint every note you created or touched:
+   `python3 scripts/validate_note.py <note>... --language <config language>`
+   — a failing note blocks completion (fix and re-lint), same hard-gate
+   status as card validation.
 6. Notes and diary get a translation section when `language` is not `en`;
    cards never do.
 7. **The user's manual edits are first-class.** Merge into their structure as
@@ -159,7 +179,10 @@ Card), exact format and presentation rules (tables, Mermaid diagrams) in
 `references/integration-rules.md`. Rules:
 
 - **Append-only.** Never parse, rewrite, or reformat existing content — the user
-  may have edited it, and their edits stay untouched.
+  may have edited it, and their edits stay untouched. Because appended text is
+  immutable afterwards, **style-check the new section BEFORE appending** (run
+  scripts/validate_card.py's `check_style` on the section text or eyeball it
+  against markdown-style U1/U4) — a defect that lands in the diary stays there.
 - File missing (even if it existed earlier today)? Create it fresh with just this
   section and mention that in the report. Do not attempt recovery.
 
@@ -182,8 +205,9 @@ End with a summary in the chat, containing:
 2. Counts: cards written, notes created, notes enriched, corroborations, conflicts.
 3. Conflicts, if any — flagged prominently for the user to resolve.
 4. New taxonomy domains, if any.
-5. Provenance integrity: check that all `source_ref` targets in the vault still
-   exist; list broken links as a warning (knowledge is unaffected; only
+5. Provenance integrity: run `scripts/check_provenance.py --vault …` —
+   it checks that all `source_ref` targets in the vault still exist and
+   lists broken links as a warning (knowledge is unaffected; only
    traceability is lost). Report only — never repair or delete.
 6. Knowledge gaps: output of `obsidian unresolved` (or note it if CLI unavailable).
 

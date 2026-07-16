@@ -170,7 +170,56 @@ def validate(card_path, domains, tag_registry):
             if section not in headings:
                 errors.append(f"missing required section for type '{fm['type']}': ## {section}")
 
-    return errors
+    style_errors, style_warnings = check_style(text)
+    errors.extend(style_errors)
+    return errors, style_warnings
+
+
+# --- markdown-style.md machine checks (U1/U2/U4) ---------------------------
+# ①-⑳ (U+2460-2473), ⑴-⒇ (U+2474-2487), Ⅰ-Ⅻ (U+2160-216B), bullet glyphs.
+CHAR_BLACKLIST_RE = re.compile(r"[①-⒇Ⅰ-Ⅻ•●▪◦]")
+FENCE_RE = re.compile(r"```.*?```", flags=re.DOTALL)
+# an enumeration marker: 1-2 digits + . 、 ) followed by space/CJK/bold —
+# the lookbehind keeps decimals like "2.5" from matching.
+ENUM_MARKER_RE = re.compile(r"(?<![\d.])\d{1,2}[.、)](?=\s|[一-鿿*])")
+
+
+def check_style(text):
+    """Enforce the machine-checkable subset of references/markdown-style.md:
+    U1 char blacklist (errors), U4 mermaid label lint (errors),
+    U1/U2 crammed-enumeration heuristic (warnings only)."""
+    errors, warnings = [], []
+    prose = FENCE_RE.sub("", text)
+
+    hit = CHAR_BLACKLIST_RE.search(prose)
+    if hit:
+        errors.append(
+            f"forbidden list-substitute character '{hit.group(0)}' "
+            "(markdown-style U1) — use markdown list syntax")
+
+    for lang, body in re.findall(r"```(\w*)\n(.*?)```", text, flags=re.DOTALL):
+        if lang != "mermaid":
+            continue
+        for line in body.splitlines():
+            bare = re.sub(r'"[^"]*"', "", line)  # quoted labels are fine
+            snippet = line.strip()[:60]
+            if "$" in bare:
+                errors.append(f"mermaid label contains '$' (markdown-style U4"
+                              f" — formulas go in prose): {snippet}")
+            elif re.search(r"\[[^\]]*[({|][^\]]*\]", bare):
+                errors.append(f"mermaid unquoted label with special char "
+                              f"(markdown-style U4): {snippet}")
+            elif bare.strip().startswith("subgraph") and re.search(r"[({]", bare):
+                errors.append(f"mermaid unquoted subgraph title "
+                              f"(markdown-style U4): {snippet}")
+
+    for line in prose.splitlines():
+        if line.lstrip().startswith(("|", "#")):
+            continue  # tables and headings legitimately pack numbers
+        if len(ENUM_MARKER_RE.findall(line)) >= 3:
+            warnings.append(f"possible crammed enumeration — split into a "
+                            f"markdown list (U1/U2): {line.strip()[:60]}")
+    return errors, warnings
 
 
 def main():
@@ -187,7 +236,8 @@ def main():
 
     failed = False
     for card in args.cards:
-        errs = validate(card, domains, tag_registry)
+        result = validate(card, domains, tag_registry)
+        errs, warns = result if isinstance(result, tuple) else (result, [])
         if errs:
             failed = True
             print(f"FAIL {card}")
@@ -195,6 +245,8 @@ def main():
                 print(f"  - {e}")
         else:
             print(f"OK   {card}")
+        for w in warns:
+            print(f"  ~ warn: {w}")
     sys.exit(1 if failed else 0)
 
 

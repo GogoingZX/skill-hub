@@ -15,6 +15,11 @@ Cards are for machine consumption — English-only, no translation section.
 - One card per topic per day. If a card for the same topic already exists with
   today's date, extend that card (flip it back to `status: raw`, re-validate,
   re-integrate) instead of inventing a second filename.
+- **Merged cards are frozen.** Once `status: merged`, a card is a provenance
+  snapshot: never edit it retroactively — presentation/style fixes go to the
+  NOTE only; new information about the topic gets a new dated card (or the
+  same-day flip-to-raw above). This keeps cards honest as "what was extracted
+  that day" and kills card/note drift maintenance.
 
 ## Frontmatter — all fields required, enums are closed
 
@@ -23,6 +28,11 @@ Cards are for machine consumption — English-only, no translation section.
 spec_version: 1                    # bump only when this spec changes
 topic: prompt-caching              # kebab-case; must match filename
 type: concept                      # concept | term | howto | gotcha | tutorial
+                                   # term vs concept: would it belong in a
+                                   # glossary? unit = a NAME people use (the
+                                   # card explains the word) -> term; unit = a
+                                   # mechanism (explains how the thing works)
+                                   # -> concept; unsure -> concept.
 domain: technology/ai-engineering  # from TAXONOMY.md; <level1>[/<level2>]
 tags: [claude-api, performance]    # 2–4 target (1–5 hard limit), from TAXONOMY '## Tags' registry
 source: conversation               # conversation | note | pdf
@@ -47,7 +57,10 @@ Fixed English `##` headings. `## References` is optional; all others required.
 Section rules:
 
 - **Example / Steps**: prefer the actual example from the source conversation —
-  concrete beats generic. Examples are written in **best-practice form from
+  concrete beats generic — but SELF-STANDING (markdown-style U6): numbers
+  chosen for teaching clarity, session/project outcomes at most one line
+  framed as evidence, never narrative ("we then…", "in the original
+  incident…"). Examples are written in **best-practice form from
   the start** (never a naive version the reader must later unlearn); when a
   practice is load-bearing — omitting it causes real failures — name it
   explicitly and state what it prevents (e.g. `@functools.wraps` on a
