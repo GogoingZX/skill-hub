@@ -74,7 +74,7 @@ annotations.
 top (mirrored in translation); pitfalls in `> [!warning]` callouts; soft-wrap
 everywhere.
 
-**T3 — Diary** (`conversation-claude/`): topic blocks per diary template;
+**T3 — Diary** (`conversation-<agent>/`): topic blocks per diary template;
 Details are bullets (U1 applies); append-only — never reformat earlier
 content, even your own from a previous run. Session-specific detail is
 CORRECT here (the diary is the record; U6 does not apply).

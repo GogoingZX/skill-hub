@@ -1,13 +1,13 @@
 # knowledge-wrapup
 
-A Claude Code skill that turns your conversations (and your own notes/PDFs) into
-a curated, Obsidian-friendly knowledge base — via a strict "knowledge card"
-middleware layer.
+An agent skill (Claude Code and Codex) that turns your conversations (and your
+own notes/PDFs) into a curated, Obsidian-friendly knowledge base — via a strict
+"knowledge card" middleware layer.
 
 ## What it does
 
 ```
-conversation ──→ diary   (conversation-claude/)          chronological record
+conversation ──→ diary   (conversation-<agent>/)         chronological record
              └─→ cards   (cards/)                        normalized middleware
                           └──→ notes (notes/)            curated knowledge base
                                + INDEX.md + TAXONOMY.md
@@ -25,6 +25,9 @@ update the index.
 | `/knowledge-wrapup` | Wrap up the current conversation: diary + cards + integration |
 | `/knowledge-wrapup <file-or-folder>` | Extract from your own notes or a PDF (no diary entry) |
 
+Under Codex the explicit form is `$knowledge-wrapup`; implicit invocation is
+disabled (`agents/openai.yaml`), so the skill never fires from a prompt match.
+
 Run it whenever a valuable discussion wraps up — running twice on the same
 conversation is safe (duplicates are recognized and skipped). Zero cards is a
 normal outcome for casual conversations.
@@ -39,8 +42,12 @@ The skill asks two questions and remembers the answers in
    `zh-CN`) keeps English as the writing language and appends a natural,
    native-quality translation to notes and diary entries.
 
-It then creates the missing skeleton (`INDEX.md`, `TAXONOMY.md`,
-`conversation-claude/`, `cards/`, `notes/`) without touching existing files.
+A third, optional key — `vault_name`, the vault's registered name in Obsidian —
+defaults to the last component of the vault path.
+
+It then creates the missing skeleton (`INDEX.md`, `TAXONOMY.md`, the agent's
+`conversation-<agent>/` directory, `cards/`, `notes/`) without touching
+existing files.
 
 Recommended one-time Obsidian settings (the skill suggests, never changes them):
 
@@ -74,20 +81,36 @@ kept or dropped — quality stays auditable.
 ```
 knowledge-wrapup/
 ├── SKILL.md                     # pipeline the model follows
+├── agents/openai.yaml           # Codex metadata (explicit invocation only)
 ├── references/
 │   ├── card-spec.md             # card schema + examples + counter-examples
-│   └── integration-rules.md     # merge rules, formats, translation quality
-├── scripts/validate_card.py     # hard validation gate for every card
+│   ├── integration-rules.md     # merge rules, formats, translation quality
+│   └── markdown-style.md        # universal typography rules (U1–U7)
+├── scripts/
+│   ├── validate_card.py         # hard gate for every card
+│   ├── validate_note.py         # hard gate for every touched note
+│   ├── validate_diary.py        # hard gate for the staged diary section
+│   ├── update_index.py          # sorted, bounded INDEX.md maintenance
+│   └── check_provenance.py      # report-only source_ref integrity check
 ├── assets/templates/            # card/note/diary/taxonomy templates
-└── evals/                       # regression test conversations
+├── evals/                       # regression protocol + fixture vault + assertions
+└── tests/                       # unit tests for the scripts (python3 -m unittest)
 ```
 
 ## Maintenance
 
 - `TAXONOMY.md` in your vault is the classification vocabulary — edit it freely;
   the skill announces any domain it adds.
-- After modifying SKILL.md, re-run the conversations in `evals/` and compare
-  outputs — that's the regression check against capability drift.
-- Versioning: SemVer in SKILL.md frontmatter (`version:`) + CHANGELOG.md.
-  Bump MINOR for new behavior rules, PATCH for wording fixes, MAJOR if card
-  or pipeline compatibility breaks; tag releases in git.
+- **One canonical home per rule.** Every rule lives in exactly one file
+  (typography → markdown-style.md, card schema → card-spec.md, merge/formats →
+  integration-rules.md, pipeline flow → SKILL.md). Any other file may restate
+  it only as a one-line summary plus a pointer — never a reworded full copy,
+  and examples must demonstrate the canonical form. When a restatement and its
+  canonical home disagree, the restatement is the defect (the ordered-References
+  example drift fixed in 1.9.0 was this class).
+- After modifying scripts, run `python3 -m unittest discover -s tests`. After
+  modifying SKILL.md or references, run the regression protocol in
+  `evals/README.md` against a scratch vault — never the real one.
+- Versioning: CHANGELOG.md is the single version source (SemVer — MINOR for
+  new behavior rules, PATCH for wording fixes, MAJOR if card or pipeline
+  compatibility breaks); tag releases in git. SKILL.md carries no version field.

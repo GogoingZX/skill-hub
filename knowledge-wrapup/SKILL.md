@@ -1,6 +1,5 @@
 ---
 name: knowledge-wrapup
-version: 1.7.0
 description: >
   Extract reusable knowledge from the current conversation (or from a user-provided
   file) into knowledge cards, then integrate them into the user's Obsidian knowledge
@@ -18,23 +17,46 @@ Data flows one way. The diary is a write-only record, never an input; cards are 
 only thing integration consumes:
 
 ```
-conversation ──→ diary   (conversation-claude/)              [write-only record]
+conversation ──→ diary   (conversation-<agent>/)             [write-only record]
              └─→ cards   (cards/)  ──→  notes (notes/) + INDEX.md + TAXONOMY.md
 ```
 
-Two invocation forms:
+`<agent>` names the executor: `conversation-claude/` when run under Claude,
+`conversation-codex/` under Codex. Historical diary directories are never
+renamed — provenance paths stay valid.
+
+Two invocation forms — under Claude the explicit form is `/knowledge-wrapup`,
+under Codex it is `$knowledge-wrapup` (implicit invocation is disabled via
+`agents/openai.yaml`; a natural-language request counts as explicit only when
+it literally asks to wrap/save knowledge into the vault):
 
 - `/knowledge-wrapup` — wrap up the current conversation (diary + cards + integration)
 - `/knowledge-wrapup <file-or-folder>` — extract from the user's own file(s): notes,
   a PDF, etc. Same pipeline, but no diary entry is written.
+
+File-mode source rules (so the same input yields the same source set on any run):
+
+- Supported inputs: Markdown / plain text (`.md`, `.txt`) and PDF. Every other
+  file is listed in the report as unsupported — never guessed at.
+- A folder is processed recursively in lexicographic path order; hidden files
+  and symlinks are skipped.
+- Unreadable or failed files are explicit warnings in the report, never silent
+  skips.
+- PDF provenance carries a page locator (`source_ref: "guide.pdf#p12"`);
+  scanned (image-only) or encrypted PDFs are reported as unsupported rather
+  than half-extracted.
 
 ## Step 0 — Configuration
 
 Read `~/.config/knowledge-wrapup/config.json`:
 
 ```json
-{ "vault_path": "~/Desktop/knowledge-base", "language": "zh-CN" }
+{ "vault_path": "~/Desktop/knowledge-base", "language": "zh-CN", "vault_name": "knowledge-base" }
 ```
+
+`vault_name` (optional) is the vault's registered name in Obsidian, used by the
+CLI search in Step 3; when absent, default to the last path component of
+`vault_path`.
 
 - **Config missing = first run.** Ask the user two questions: (1) where should the
   knowledge base live (absolute path), (2) localization language (`en` means
@@ -42,7 +64,8 @@ Read `~/.config/knowledge-wrapup/config.json`:
   section in that language). Then write the config file.
 - **Ensure the vault skeleton exists** — create only what is missing, never modify
   what exists: `INDEX.md`, `TAXONOMY.md` (copy the starter from
-  `assets/templates/TAXONOMY.md`), `conversation-claude/`, `cards/`, `notes/`.
+  `assets/templates/TAXONOMY.md`), the executing agent's `conversation-<agent>/`
+  directory, `cards/`, `notes/`.
 - On first initialization only, suggest to the user (do not change settings
   yourself): enable Obsidian's File Recovery core plugin, and add `cards/` to
   Settings → Files & links → Excluded files, so the intermediate card layer does
@@ -84,14 +107,23 @@ conversation yields 0–5 cards.
 
 ## Step 3 — Dedupe against the vault
 
-For each surviving candidate, search existing notes (scope: `notes/` only —
+First list today's already-written cards (`ls <vault_path>/cards/*--{yyyyMMdd}.md`)
+so a same-day sibling session's extractions are visible upfront instead of being
+discovered as collisions card-by-card.
+
+Then, for each surviving candidate, search existing notes (scope: `notes/` only —
 never match against `cards/`):
 
 ```bash
-obsidian vault="<vault-name>" search query="<topic keywords>"
-# If the Obsidian CLI is unavailable, fall back to:
+obsidian vault="<vault_name>" search query="<topic keywords>"
+# If the command FAILS or is missing (e.g. Obsidian isn't running),
+# fall back to filesystem search — prefer rg, then grep:
+rg -il "<topic keywords>" <vault_path>/notes/
 grep -ril "<topic keywords>" <vault_path>/notes/
 ```
+
+An existing executable is not proof the CLI works — it needs a running Obsidian.
+Pick the search backend once per run and name it in the final report.
 
 Classify the candidate's relation to the vault — exactly one of four:
 
@@ -102,8 +134,11 @@ Classify the candidate's relation to the vault — exactly one of four:
 | **supplements** | new information, no contradiction | append to the existing note, cite source |
 | **conflicts** | contradicts the existing note | record both claims, never silently overwrite |
 
-Running the skill twice on the same conversation is safe by construction: the
-second run's candidates land on **corroborates** and are skipped.
+Running the skill twice on the same conversation is safe by construction — but
+a replayed source is a **duplicate, not corroboration**: if the note's Sources
+already list the same `source_ref`, skip the candidate entirely (no source line,
+no diary append) and say so in the report. `corroborates` is reserved for an
+*independent* source that agrees (details in `references/integration-rules.md`).
 
 ## Step 4 — Write cards
 
@@ -160,9 +195,9 @@ TAXONOMY/INDEX maintenance. In brief:
    (idempotent: refreshes an existing line instead of duplicating) — and
    flip integrated cards to `status: merged`.
 5b. Lint every note you created or touched:
-   `python3 scripts/validate_note.py <note>... --language <config language>`
-   — a failing note blocks completion (fix and re-lint), same hard-gate
-   status as card validation.
+   `python3 scripts/validate_note.py <note>... --language <config language>
+   --vault <vault_path>` — a failing note blocks completion (fix and
+   re-lint), same hard-gate status as card validation.
 6. Notes and diary get a translation section when `language` is not `en`;
    cards never do.
 7. **The user's manual edits are first-class.** Merge into their structure as
@@ -172,7 +207,7 @@ TAXONOMY/INDEX maintenance. In brief:
 ## Step 5b — Diary (conversation mode only)
 
 Append one section to
-`<vault_path>/conversation-claude/conversation-{yyyyMMdd}.md`, instantiated from
+`<vault_path>/conversation-<agent>/conversation-{yyyyMMdd}.md`, instantiated from
 `assets/templates/diary-section.md` — topic-structured: one `### Topic:` block
 per topic (Summary / Details with 1–2 examples / Open items / References /
 Card), exact format and presentation rules (tables, Mermaid diagrams) in
@@ -180,9 +215,14 @@ Card), exact format and presentation rules (tables, Mermaid diagrams) in
 
 - **Append-only.** Never parse, rewrite, or reformat existing content — the user
   may have edited it, and their edits stay untouched. Because appended text is
-  immutable afterwards, **style-check the new section BEFORE appending** (run
-  scripts/validate_card.py's `check_style` on the section text or eyeball it
-  against markdown-style U1/U4) — a defect that lands in the diary stays there.
+  immutable afterwards, **validate the staged section BEFORE appending** — write
+  it to a temp file and run
+  `python3 scripts/validate_diary.py <staged-file> --language <config language>`
+  (hard gate: fix and re-validate until clean) — a defect that lands in the
+  diary stays there.
+- **Rerun guard.** If today's diary already contains a section for this same
+  session (same topics from the same conversation — e.g. the skill was rerun),
+  skip the append and say so in the report instead of recording the session twice.
 - File missing (even if it existed earlier today)? Create it fresh with just this
   section and mention that in the report. Do not attempt recovery.
 

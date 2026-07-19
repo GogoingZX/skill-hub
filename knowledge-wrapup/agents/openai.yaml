@@ -1,0 +1,13 @@
+# Codex-specific skill metadata (Claude ignores this file).
+# This skill writes into the user's private knowledge vault, so it must never
+# be invoked implicitly from a prompt match — explicit $knowledge-wrapup only.
+
+interface:
+  display_name: "Knowledge Wrapup"
+  short_description: >-
+    Extract reusable knowledge from a conversation or file into the user's
+    Obsidian knowledge base (diary, cards, curated notes). Writes to the
+    private vault — invoke explicitly.
+
+policy:
+  allow_implicit_invocation: false

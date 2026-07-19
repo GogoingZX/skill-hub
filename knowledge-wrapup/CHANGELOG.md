@@ -9,6 +9,53 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.9.0] — 2026-07-19
+
+Implements the accepted findings of
+`docs/codex-compatibility-and-reliability-review.md` (KW-01…KW-10, with
+KW-03/KW-04/KW-07/KW-08 deliberately scoped lighter than proposed).
+
+### Added
+- Codex support (KW-01): user-level symlink at `~/.agents/skills/`,
+  `agents/openai.yaml` with `allow_implicit_invocation: false`, and the
+  `$knowledge-wrapup` explicit form documented alongside `/knowledge-wrapup`.
+- Cross-agent diary (KW-06, minimal model): diary dir is
+  `conversation-<agent>/` — `conversation-claude/` under Claude,
+  `conversation-codex/` under Codex; historical paths never renamed.
+- `scripts/validate_diary.py` (KW-04): CLI hard gate for the staged diary
+  section (style checks, topic structure, English summary vs translation
+  mirror) — replaces "call check_style or eyeball it".
+- File-mode source rules (KW-07): supported extensions, recursive
+  lexicographic traversal, explicit reporting of unsupported/unreadable
+  files, PDF page locators.
+- Optional `vault_name` config key (KW-10); Step 3 fallback triggers on CLI
+  *failure* (not just absence), prefers `rg` over `grep`, and names the
+  search backend in the report.
+- Executable eval protocol (KW-08, deterministic half): `evals/README.md`,
+  `evals/vault-fixture/`, per-conversation assertion checklists, and a
+  `tests/` unittest suite for all four scripts (27 tests).
+
+### Changed
+- Version governance (KW-02): `version` removed from SKILL.md frontmatter —
+  this changelog is the single version source (the field had drifted to
+  1.7.0 while releases reached 1.8.1, and it blocks Codex validation).
+- `update_index.py` (KW-05): `### <level2>` lookup is now bounded to its
+  `## <level1>` section (same-named subdomains can no longer collide), and
+  entries are kept alphabetical by title per integration-rules; INDEX
+  contract now documents the two-level structure.
+- Duplicate vs corroboration (KW-03, rule-level instead of run manifests):
+  a replayed `source_ref` is a duplicate — no source line, no diary append;
+  `corroborates` is reserved for independent agreeing sources. Diary gains
+  a rerun guard; Step 3 starts by listing today's already-written cards
+  (closes the TODO sibling-session item, recorded 2026-07-16).
+- Validators (KW-04): card sections checked for order (not just presence),
+  dates must be real calendar dates; `validate_note.py` gains `--vault`
+  TAXONOMY domain/tag checks, empty-field detection, and a `spec_version`
+  check. Report-only audit of the live vault passed clean (141 cards,
+  125 notes, 285 provenance refs), so the stricter checks land as errors.
+- Worked examples aligned with the ordered-References rule (KW-09) in
+  card-spec and integration-rules (note format + diary example).
+
 ## [1.8.1] — 2026-07-11
 
 ### Changed

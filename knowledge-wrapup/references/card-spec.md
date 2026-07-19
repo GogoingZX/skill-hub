@@ -128,8 +128,7 @@ Basic git workflow (add/commit).
 `git log --oneline` reads like a changelog a teammate can follow.
 
 ## References
-- [Conventional Commits](https://www.conventionalcommits.org/) — the
-  `type(scope): subject` convention and its rationale.
+1. [Conventional Commits](https://www.conventionalcommits.org/) — the `type(scope): subject` convention and its rationale.
 
 ## Related
 [[git-workflow]], [[code-review]]

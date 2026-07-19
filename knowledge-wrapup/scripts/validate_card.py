@@ -11,6 +11,7 @@ No third-party dependencies: frontmatter is flat key/value YAML parsed here.
 import argparse
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 SPEC_VERSION = "1"
@@ -130,6 +131,10 @@ def validate(card_path, domains, tag_registry):
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", fm["date"]):
         errors.append(f"date '{fm['date']}' is not yyyy-MM-dd")
     else:
+        try:
+            date.fromisoformat(fm["date"])
+        except ValueError:
+            errors.append(f"date '{fm['date']}' is not a real calendar date")
         expected = f"{fm['topic']}--{fm['date'].replace('-', '')}.md"
         if FILENAME_RE.match(p.name) and p.name != expected:
             errors.append(f"filename '{p.name}' does not match topic+date ('{expected}')")
@@ -165,10 +170,17 @@ def validate(card_path, domains, tag_registry):
         )
 
     if fm["type"] in REQUIRED_SECTIONS:
+        required = REQUIRED_SECTIONS[fm["type"]]
         headings = re.findall(r"^##\s+(.+?)\s*$", text, flags=re.MULTILINE)
-        for section in REQUIRED_SECTIONS[fm["type"]]:
-            if section not in headings:
-                errors.append(f"missing required section for type '{fm['type']}': ## {section}")
+        missing = [s for s in required if s not in headings]
+        for section in missing:
+            errors.append(f"missing required section for type '{fm['type']}': ## {section}")
+        if not missing:
+            found = [h for h in headings if h in required]
+            if found != required:  # wrong order, or a duplicated section
+                errors.append(
+                    f"required sections out of order for type '{fm['type']}': "
+                    f"found {found}, spec order is {required}")
 
     style_errors, style_warnings = check_style(text)
     errors.extend(style_errors)

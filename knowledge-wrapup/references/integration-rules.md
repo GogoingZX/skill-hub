@@ -22,8 +22,7 @@ spec_version: 1
 [Body sections mirror the card type's structure — see card-spec.md]
 
 ## References
-- [Conventional Commits](https://www.conventionalcommits.org/) — the convention
-  and its rationale.
+1. [Conventional Commits](https://www.conventionalcommits.org/) — the convention and its rationale.
 
 ## Sources
 - conversation-claude/conversation-20260705.md (discussed)
@@ -43,9 +42,13 @@ language is "en"]
 **new** — instantiate `assets/templates/note.md`, fill body from the card, list
 the card's source in `## Sources`, place in `notes/<domain>/`, add an INDEX line.
 
-**corroborates** — add one line to `## Sources` (nothing else changes). If the
-note now has 2+ independent agreeing sources, you may note "(corroborated)" on
-the source lines. Do not duplicate content.
+**corroborates** — add one line to `## Sources` (nothing else changes). First
+check the existing Sources list: if the same `source_ref` is already there, this
+is a **duplicate** — the same source replayed (a rerun, a re-read file), not
+independent evidence. Skip it entirely: no source line, no count, one line in
+the report. `corroborates` is reserved for an *independent* source that agrees.
+If the note now has 2+ independent agreeing sources, you may note
+"(corroborated)" on the source lines. Do not duplicate content.
 
 **supplements** — append the new information to the appropriate existing section
 (or add a section), with an inline source marker like
@@ -98,20 +101,31 @@ Rules:
 
 ## INDEX.md
 
-One line per note, grouped by level-1 domain, alphabetical within a group:
+One line per note. Structure mirrors the taxonomy: a `## <level1>` section per
+domain; notes in a level-2 subdomain sit under a `### <level2>` heading inside
+their domain section. Entries are alphabetical by title within each (sub)section:
 
 ```markdown
 ## technology
+
+### tools
+
 - [Writing Good Git Commit Messages](notes/technology/tools/git-commit-messages.md) — subject in imperative ≤50 chars; body explains why
 ```
 
 The hook after the dash is a one-line reminder of the note's core point, not a
 category label. Update the line when a note is significantly enriched.
 
+Always maintain INDEX.md through `scripts/update_index.py` — it enforces
+placement (a `### <level2>` is only matched inside its own `## <level1>`,
+so same-named subdomains under different domains cannot collide) and keeps
+the alphabetical order; hand-editing placement invites both defects back.
+
 ## Diary entry format
 
-`conversation-claude/conversation-{yyyyMMdd}.md` — one file per day, one appended
-section per run. The section is **topic-structured**: one `### Topic:` block per
+`conversation-<agent>/conversation-{yyyyMMdd}.md` (`conversation-claude/` when
+run under Claude, `conversation-codex/` under Codex) — one file per day, one
+appended section per run. The section is **topic-structured**: one `### Topic:` block per
 topic discussed, so the diary reads as a browsable digest, not a blob.
 Instantiate `assets/templates/diary-section.md`:
 
@@ -127,7 +141,11 @@ unresolved/orphans for graph maintenance. Example:
 `obsidian vault="kb" search query="prompt caching"`.
 
 **Open items:** [omit line if none]
-**References:** https://obsidian.md/cli
+
+**References**
+
+1. https://obsidian.md/cli — official CLI overview
+
 **Card:** [[obsidian-cli]]
 
 **中文:** [natural translation of Summary + Details]
