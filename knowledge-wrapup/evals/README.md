@@ -13,7 +13,9 @@ writes go to a scratch copy; any write outside it fails the eval.
 1. Copy `vault-fixture/` to a scratch directory, e.g.
    `cp -R evals/vault-fixture /tmp/kw-eval-vault`.
 2. Run the skill in file mode on `evals/conversation-a.md`, with `vault_path`
-   pointed at the scratch copy and `language` = `zh-CN` for the run. Do not
+   pointed at the scratch copy, `language` = `zh-CN`, and `privacy_denylist` =
+   `["alan"]` for the run (a deterministic stand-in for a real denylist —
+   conversation A deliberately contains a personal name in an example). Do not
    read or modify `~/.config/knowledge-wrapup/config.json` or the real vault.
    Pin file-mode provenance: `source: note`, `source_ref` = the transcript path
    as given.
@@ -25,8 +27,11 @@ writes go to a scratch copy; any write outside it fails the eval.
    produce zero changes (all candidates are duplicates of an already-listed
    `source_ref`).
 6. Deterministic close-out on the scratch vault: every card passes
-   `validate_card.py --vault`, every note passes `validate_note.py --language
-   zh-CN --vault`, and `check_provenance.py --vault` reports no broken refs.
+   `validate_card.py --vault --privacy-denylist "alan"`, every note passes
+   `validate_note.py --language zh-CN --vault --privacy-denylist "alan"`, and
+   `check_provenance.py --vault` reports no broken refs. Both validators must
+   emit **zero warnings**, not just exit 0 — freshly generated content has no
+   grandfathered legacy to excuse.
 
 ## Maintenance
 

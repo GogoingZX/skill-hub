@@ -46,7 +46,8 @@ DESTRUCTIVE_RE = re.compile(
     r"DROP TABLE|DROP DATABASE", re.I)
 RECOVERY_RE = re.compile(r"reflog|--lost-found|fsck|recover|restore|irreversible|"
                          r"不可逆|恢复|undo|backup", re.I)
-PREFLIGHT_RE = re.compile(r"preflight|git status|git log|--dry-run|dry-run|预检", re.I)
+PREFLIGHT_RE = re.compile(r"preflight|git status|git log|--dry-run|dry-run|预检|"
+                          r"check[^.\n]*first|核对", re.I)
 TAIL_SECTIONS = ["References", "Related", "Sources"]
 
 

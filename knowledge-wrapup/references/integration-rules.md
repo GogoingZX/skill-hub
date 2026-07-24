@@ -163,7 +163,11 @@ the commands, the caveats. The reader should not need the original
 conversation to reconstruct what was learned. Brevity lives in Summary;
 Details is the record.
 
-Append-only. Never modify existing sections, even to fix formatting. If today's
+Append-only. Never modify existing sections, even to fix formatting. The one
+exception is a **privacy scrub** (card-spec: synthetic identifiers): removing a
+real identifier or private datum that must not persist may edit existing diary
+content in place — the minimal substitution only, nothing else rewritten, and
+the scrub is announced in the run report. If today's
 file is missing, create it fresh and mention that in the report.
 
 ## Presentation rules (notes and diary)

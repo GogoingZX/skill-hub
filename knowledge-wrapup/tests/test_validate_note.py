@@ -139,6 +139,15 @@ class ValidateNoteTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("destructive command", r.stdout)
 
+    def test_destructive_with_generic_preflight_and_recovery_passes(self):
+        ok = GOOD.replace(
+            "Body prose.",
+            "Remove it with `rm -rf ~/data/cache/<name>` — check `<name>` "
+            "first with the list command; restore anytime by re-running install.")
+        r = self.validate(self.write_note(ok))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertNotIn("destructive command", r.stdout)
+
     def test_tail_section_order_warns(self):
         warn = GOOD.replace(
             "- conversation-claude/conversation-20260718.md (discussed)",

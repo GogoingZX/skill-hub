@@ -39,7 +39,7 @@ Cards are for machine consumption — English-only, no translation section.
   privacy scrub**: removing a real identifier or private datum that must not
   persist anywhere (see synthetic-data rule) may edit a frozen card in place.
 
-## Frontmatter — all fields required, enums are closed
+## Frontmatter — enums are closed; fields required unless marked optional
 
 ```yaml
 ---

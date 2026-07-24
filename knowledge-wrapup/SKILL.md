@@ -209,14 +209,14 @@ TAXONOMY/INDEX maintenance. In brief:
    `scripts/update_index.py --vault … --note … --title … --summary …`
    (idempotent: refreshes an existing line instead of duplicating) — and
    flip integrated cards to `status: merged`.
-5b. Lint every note you created or touched:
+6. Lint every note you created or touched:
    `python3 scripts/validate_note.py <note>... --language <config language>
    --vault <vault_path> --privacy-denylist "<config privacy_denylist>"` —
    a failing note blocks completion (fix and re-lint), same hard-gate status
    as card validation.
-6. Notes and diary get a translation section when `language` is not `en`;
+7. Notes and diary get a translation section when `language` is not `en`;
    cards never do.
-7. **The user's manual edits are first-class.** Merge into their structure as
+8. **The user's manual edits are first-class.** Merge into their structure as
    best you can; if a note has been restructured beyond recognition, say so in
    the report instead of "fixing" it.
 
@@ -230,7 +230,8 @@ Card), exact format and presentation rules (tables, Mermaid diagrams) in
 `references/integration-rules.md`. Rules:
 
 - **Append-only.** Never parse, rewrite, or reformat existing content — the user
-  may have edited it, and their edits stay untouched. Because appended text is
+  may have edited it, and their edits stay untouched. (Sole exception: a privacy
+  scrub — see `references/integration-rules.md`.) Because appended text is
   immutable afterwards, **validate the staged section BEFORE appending** — write
   it to a temp file and run
   `python3 scripts/validate_diary.py <staged-file> --language <config language>`

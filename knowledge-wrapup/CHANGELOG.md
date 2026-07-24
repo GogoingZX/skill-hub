@@ -9,6 +9,41 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.13.0] — 2026-07-24
+
+### Added
+- Diary privacy-scrub exception codified: the append-only rule's sole exception
+  is a privacy scrub (integration-rules, canonical; SKILL.md Step 5b pointer) —
+  minimal in-place substitution, announced in the run report. Retroactively
+  legitimizes the 2026-07-21 vault scrub, which edited a diary file and two
+  frozen cards under the card-spec exception.
+- Eval protocol hardened: validator invocations pin `--privacy-denylist "alan"`
+  (conversation A deliberately carries a personal name in an example) and the
+  close-out requires zero warnings, not just exit 0. Expected checklists
+  backfilled for the v1.10–v1.12 rules: concept-first topic naming on the
+  gotcha card, depth standard, destructive five-part form with marked
+  enrichment, claim-scope attribution.
+
+### Fixed
+- `validate_card.py` filename/topic regexes now accept the optional `--<id>`
+  suffix v1.10.0 itself sanctions (`python-inline-script-deps--pep723` was
+  failing its own spec); tags still reject `--`.
+- Crammed-enumeration heuristic no longer false-positives on ratio data
+  followed by 、 (e.g. "4/4、加拿大 4/4").
+- `validate_note.py` PREFLIGHT_RE recognizes generic preflight language
+  ("check … first", 核对), not only git-specific forms — jupyter-kernels'
+  compliant rm-rf guidance no longer warns.
+
+### Changed
+- Merged cards suppress Level-2 warnings: the freeze rule makes advisory
+  warnings unactionable on `status: merged`, so audits stay signal-bearing;
+  errors still apply, and a same-day flip back to `raw` re-arms the warnings.
+- SKILL.md Step 5 inner list renumbered (the duplicate "5b" label is gone;
+  "Step 5b" now unambiguously means the diary step); card-spec frontmatter
+  heading corrected to "fields required unless marked optional".
+- Tests 47 → 54 (topic/tag suffix, merged-card suppression ×2, ratio
+  no-warn + crammed still-warns, generic-preflight pass).
+
 ## [1.12.0] — 2026-07-21
 
 ### Added

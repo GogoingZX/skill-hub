@@ -22,6 +22,14 @@ Run in file mode against a fresh copy of `vault-fixture/`.
       an ordered list containing https://www.conventionalcommits.org/.
 - [ ] idempotency covers: safe-to-retry meaning, the PUT-vs-POST example, and
       the idempotency-key motivation for payment APIs. No invented URLs.
+- [ ] Depth (teach, don't digest): the commit-message card explains the
+      `type(scope): subject` tokens rather than only naming the convention;
+      the idempotency card carries the mechanism (retries are harmless because
+      the *state* result is unchanged), not one-line conclusions.
+- [ ] Privacy (denylist pinned to `alan`): the PUT example's personal name is
+      replaced with a neutral stand-in — both validators pass with
+      `--privacy-denylist "alan"`; no absolute home paths with real usernames
+      anywhere in cards or notes.
 
 ## Notes and index
 
@@ -41,3 +49,6 @@ Run in file mode against a fresh copy of `vault-fixture/`.
 - [ ] Zero writes outside the scratch vault; the real vault and real config
       are untouched.
 - [ ] `check_provenance.py --vault <scratch>` reports no broken refs.
+- [ ] Both validators emit zero warnings: no empty `## References` headings
+      (omit, or `none — <why>`), tail sections in References → Related →
+      Sources order, no absolute-word titles without `scope: universal`.

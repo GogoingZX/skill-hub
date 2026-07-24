@@ -125,6 +125,48 @@ class ValidateCardTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("empty '## References'", r.stdout)
 
+    def test_ratio_data_line_does_not_warn_crammed(self):
+        ok = GOOD.replace("## Goal\nX.",
+                          "## Goal\n- 实测:欧洲 4/4、加拿大 4/4、日本 3/4、澳洲 3/4")
+        r = run("validate_card.py", self.write_card(ok), "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertNotIn("crammed", r.stdout)
+
+    def test_crammed_enumeration_still_warns(self):
+        warn = GOOD.replace("## Goal\nX.",
+                            "## Goal\n步骤:1、克隆仓库 2、安装依赖 3、运行测试")
+        r = run("validate_card.py", self.write_card(warn), "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("crammed", r.stdout)
+
+    def test_topic_with_id_suffix_passes(self):
+        ok = GOOD.replace("topic: good-card", "topic: good-card--pep723")
+        r = run("validate_card.py",
+                self.write_card(ok, "good-card--pep723--20260718.md"),
+                "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_tag_with_id_suffix_fails(self):
+        bad = GOOD.replace("tags: [git, best-practice]", "tags: [git--pep723]")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("kebab-case", r.stdout)
+
+    def test_merged_card_warnings_suppressed(self):
+        warn = GOOD.replace("## Related\n[[other-topic]]",
+                            "## References\n\n## Related\n[[other-topic]]") \
+                   .replace("status: raw", "status: merged")
+        r = run("validate_card.py", self.write_card(warn), "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertNotIn("warn:", r.stdout)
+
+    def test_merged_card_errors_still_fail(self):
+        bad = GOOD.replace("status: raw", "status: merged") \
+                  .replace("## Goal\nX.", "## Goal\nRun /Users/alan/proj/x.py")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("real-looking username", r.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -15,8 +15,11 @@ from datetime import date
 from pathlib import Path
 
 SPEC_VERSION = "1"
-FILENAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*--\d{8}\.md$")
+# A topic may carry one optional '--<id>' suffix anchor (card-spec: spec/standard
+# numbers, e.g. python-inline-script-deps--pep723); tags may not.
+FILENAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:--[a-z0-9]+)?--\d{8}\.md$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+TOPIC_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:--[a-z0-9]+)?$")
 
 ENUMS = {
     "type": {"concept", "term", "howto", "gotcha", "tutorial"},
@@ -131,8 +134,9 @@ def validate(card_path, domains, tag_registry, denylist=None):
     for field, allowed in ENUMS.items():
         if fm[field] not in allowed:
             errors.append(f"{field} '{fm[field]}' not in {sorted(allowed)}")
-    if not SLUG_RE.match(fm["topic"]):
-        errors.append(f"topic '{fm['topic']}' is not lowercase kebab-case")
+    if not TOPIC_RE.match(fm["topic"]):
+        errors.append(f"topic '{fm['topic']}' is not lowercase kebab-case "
+                      f"(one optional '--<id>' suffix allowed)")
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", fm["date"]):
         errors.append(f"date '{fm['date']}' is not yyyy-MM-dd")
     else:
@@ -192,7 +196,14 @@ def validate(card_path, domains, tag_registry, denylist=None):
     errors.extend(style_errors)
     priv_errors, priv_warnings = check_privacy(text, denylist)
     errors.extend(priv_errors)
-    return errors, style_warnings + priv_warnings + check_references(text)
+    warnings = style_warnings + priv_warnings + check_references(text)
+    if fm["status"] == "merged":
+        # Frozen provenance snapshots (card-spec: freeze rule) may not be edited
+        # to act on advisory warnings — suppressing them keeps audit output
+        # signal-bearing. Errors (structure, enums, privacy) still apply; a
+        # same-day flip back to 'raw' re-arms the warnings.
+        warnings = []
+    return errors, warnings
 
 
 # --- markdown-style.md machine checks (U1/U2/U4) ---------------------------
@@ -200,8 +211,8 @@ def validate(card_path, domains, tag_registry, denylist=None):
 CHAR_BLACKLIST_RE = re.compile(r"[①-⒇Ⅰ-Ⅻ•●▪◦]")
 FENCE_RE = re.compile(r"```.*?```", flags=re.DOTALL)
 # an enumeration marker: 1-2 digits + . 、 ) followed by space/CJK/bold —
-# the lookbehind keeps decimals like "2.5" from matching.
-ENUM_MARKER_RE = re.compile(r"(?<![\d.])\d{1,2}[.、)](?=\s|[一-鿿*])")
+# the lookbehind keeps decimals like "2.5" and ratios like "4/4、" from matching.
+ENUM_MARKER_RE = re.compile(r"(?<![\d./])\d{1,2}[.、)](?=\s|[一-鿿*])")
 
 
 def check_style(text):
