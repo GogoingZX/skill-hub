@@ -25,6 +25,11 @@ ENUMS = {
     "status": {"raw", "merged", "dropped"},
 }
 
+# Optional claim-scope field (spec 1.1+): validated when present, never required
+# (a judgment field — enforced at spec level, not as a hard gate). universal |
+# versioned | observed | policy; versioned/observed also require last_verified.
+SCOPE_ENUM = {"universal", "versioned", "observed", "policy"}
+
 REQUIRED_FIELDS = [
     "spec_version", "topic", "type", "domain", "tags",
     "source", "source_ref", "confidence", "date", "status",
@@ -102,7 +107,7 @@ def load_taxonomy(vault):
     return domains, tags
 
 
-def validate(card_path, domains, tag_registry):
+def validate(card_path, domains, tag_registry, denylist=None):
     errors = []
     p = Path(card_path)
     if not p.exists():
@@ -182,9 +187,12 @@ def validate(card_path, domains, tag_registry):
                     f"required sections out of order for type '{fm['type']}': "
                     f"found {found}, spec order is {required}")
 
+    errors.extend(check_scope(fm))
     style_errors, style_warnings = check_style(text)
     errors.extend(style_errors)
-    return errors, style_warnings
+    priv_errors, priv_warnings = check_privacy(text, denylist)
+    errors.extend(priv_errors)
+    return errors, style_warnings + priv_warnings + check_references(text)
 
 
 # --- markdown-style.md machine checks (U1/U2/U4) ---------------------------
@@ -234,12 +242,84 @@ def check_style(text):
     return errors, warnings
 
 
+def check_scope(fm):
+    """Validate the optional claim-scope field. Returns a list of errors (empty
+    when scope is absent — the field is optional)."""
+    errors = []
+    scope = fm.get("scope", "")
+    if not scope:
+        return errors
+    if scope not in SCOPE_ENUM:
+        return [f"scope '{scope}' not in {sorted(SCOPE_ENUM)}"]
+    if scope in {"versioned", "observed"}:
+        lv = fm.get("last_verified", "")
+        if not lv:
+            errors.append(f"scope '{scope}' requires a last_verified date (yyyy-MM-dd)")
+        elif not re.match(r"^\d{4}-\d{2}-\d{2}$", lv):
+            errors.append(f"last_verified '{lv}' is not yyyy-MM-dd")
+        else:
+            try:
+                date.fromisoformat(lv)
+            except ValueError:
+                errors.append(f"last_verified '{lv}' is not a real calendar date")
+    return errors
+
+
+# --- privacy scan (A1): synthetic-data rule from card-spec ------------------
+# A literal home path with a real-looking username, or a non-example email, is a
+# privacy-red-line violation in vault content. Placeholders are allowed.
+HOME_PATH_RE = re.compile(r"/(?:Users|home)/(?!<|\$)([A-Za-z0-9._-]+)/")
+PLACEHOLDER_USERS = {"user", "username", "you", "me", "name", "example",
+                     "youruser", "dev-a", "someone"}
+EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+EXAMPLE_EMAIL_DOMAINS = {"example.com", "example.org", "example.net", "test.com",
+                         "company.com", "foo.com", "acme.com", "email.com"}
+
+
+def check_references(text):
+    """A3: a present-but-empty '## References' heading is a defect — omit it or
+    state 'none — <why>'. Returns a list of warnings."""
+    m = re.search(r"^##+\s+References\s*\n(.*?)(?=^##+\s|\Z)", text,
+                  re.MULTILINE | re.DOTALL)
+    if m and not m.group(1).strip():
+        return ["empty '## References' heading — omit it, or write "
+                "'none — <why>' (card-spec: references policy)"]
+    return []
+
+
+def check_privacy(text, denylist=None):
+    """Scan for private identifiers (A1). Returns (errors, warnings).
+    Home paths with a real-looking user and denylisted terms are errors;
+    non-example emails are warnings."""
+    errors, warnings = [], []
+    for m in HOME_PATH_RE.finditer(text):
+        if m.group(1).lower() not in PLACEHOLDER_USERS:
+            errors.append(
+                f"absolute home path with a real-looking username: '{m.group(0)}' "
+                f"— use ~ or a placeholder like /Users/<user>/ (card-spec: synthetic data)")
+    for m in EMAIL_RE.finditer(text):
+        if m.group(0).split("@", 1)[1].lower() not in EXAMPLE_EMAIL_DOMAINS:
+            warnings.append(
+                f"email address '{m.group(0)}' — if real, replace with an "
+                f"example.com address or remove (card-spec: synthetic data)")
+    for term in (denylist or []):
+        term = term.strip()
+        if term and re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text, re.I):
+            errors.append(
+                f"private identifier '{term}' (privacy denylist) appears in the "
+                f"content — synthesize it (card-spec: synthetic data)")
+    return errors, warnings
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cards", nargs="+")
     ap.add_argument("--vault", required=True, help="vault path (for TAXONOMY.md lookup)")
+    ap.add_argument("--privacy-denylist", default="",
+                    help="comma-separated private identifiers to flag (usernames, real names)")
     args = ap.parse_args()
 
+    denylist = [t for t in args.privacy_denylist.split(",") if t.strip()]
     domains, tag_registry = load_taxonomy(Path(args.vault).expanduser())
     if domains is None:
         print(f"WARNING: TAXONOMY.md not found under {args.vault}; domain check skipped")
@@ -248,7 +328,7 @@ def main():
 
     failed = False
     for card in args.cards:
-        result = validate(card, domains, tag_registry)
+        result = validate(card, domains, tag_registry, denylist)
         errs, warns = result if isinstance(result, tuple) else (result, [])
         if errs:
             failed = True

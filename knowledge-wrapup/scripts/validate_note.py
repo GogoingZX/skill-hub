@@ -29,7 +29,8 @@ import re
 import sys
 from pathlib import Path
 
-from validate_card import SLUG_RE, check_style, load_taxonomy, parse_frontmatter, parse_tags
+from validate_card import (SLUG_RE, check_privacy, check_references, check_scope,
+                           check_style, load_taxonomy, parse_frontmatter, parse_tags)
 
 REQUIRED_FIELDS = ["topic", "domain", "tags", "status", "spec_version"]
 STATUS_ENUM = {"active", "disputed"}
@@ -38,6 +39,15 @@ TRANSLATION_HEADING_RE = re.compile(r"^## \S*(翻译|译文|translation)\S*\s*$"
                                     re.MULTILINE | re.IGNORECASE)
 ORDERED_ITEM_RE = re.compile(r"^\s*\d+\.\s", re.MULTILINE)
 TABLE_SEP_RE = re.compile(r"^\|[-| :]+\|\s*$", re.MULTILINE)
+ABSOLUTE_TITLE_RE = re.compile(r"\b(Never|Always|Cannot|Nothing|Every)\b")
+DESTRUCTIVE_RE = re.compile(
+    r"reset --hard|rm -rf|rm -fr|rm .*\.git|branch -D\b|push --force|"
+    r"--force-with-lease|gc --prune|git clean -[fdx]|filter-branch|filter-repo|"
+    r"DROP TABLE|DROP DATABASE", re.I)
+RECOVERY_RE = re.compile(r"reflog|--lost-found|fsck|recover|restore|irreversible|"
+                         r"不可逆|恢复|undo|backup", re.I)
+PREFLIGHT_RE = re.compile(r"preflight|git status|git log|--dry-run|dry-run|预检", re.I)
+TAIL_SECTIONS = ["References", "Related", "Sources"]
 
 
 def _strip_sections(text, names):
@@ -48,7 +58,7 @@ def _strip_sections(text, names):
     return text
 
 
-def validate(path, language, domains=None, tag_registry=None, vault=None):
+def validate(path, language, domains=None, tag_registry=None, vault=None, denylist=None):
     p = Path(path)
     text = p.read_text()
     errors, warnings = [], []
@@ -65,6 +75,7 @@ def validate(path, language, domains=None, tag_registry=None, vault=None):
         errors.append(f"spec_version is '{fm['spec_version']}', expected '{SPEC_VERSION}'")
     if fm.get("topic") and p.name != f"{fm['topic']}.md":
         errors.append(f"filename '{p.name}' != topic '{fm['topic']}.md'")
+    errors.extend(check_scope(fm))
 
     if fm.get("tags"):
         tags = parse_tags(fm["tags"])
@@ -124,9 +135,30 @@ def validate(path, language, domains=None, tag_registry=None, vault=None):
         elif "[!summary]" not in zh_body:
             warnings.append("translation section has no [!summary] mirror")
 
+    title_m = re.search(r"^#\s+(.+)$", en_body, re.MULTILINE)
+    if title_m and fm.get("scope") != "universal" and ABSOLUTE_TITLE_RE.search(title_m.group(1)):
+        warnings.append(f"absolute word in title '{title_m.group(1).strip()}' — soften, "
+                        f"or set scope: universal if the claim truly always holds")
+
+    if DESTRUCTIVE_RE.search(en_body) and not (
+            RECOVERY_RE.search(en_body) and PREFLIGHT_RE.search(en_body)):
+        warnings.append("destructive command without both recovery and preflight "
+                        "guidance — apply the five-part form (card-spec: destructive operations)")
+
+    actual = [s for s in re.findall(r"^##\s+(\w+)", en_body, re.MULTILINE)
+              if s in TAIL_SECTIONS]
+    canonical = [s for s in TAIL_SECTIONS if s in actual]
+    if actual != canonical:
+        warnings.append(f"tail sections {actual} not in canonical order "
+                        f"{canonical} (References -> Related -> Sources)")
+
     style_errors, style_warnings = check_style(text)
     errors.extend(style_errors)
     warnings.extend(style_warnings)
+    warnings.extend(check_references(text))
+    priv_errors, priv_warnings = check_privacy(text, denylist)
+    errors.extend(priv_errors)
+    warnings.extend(priv_warnings)
 
     # U7 structure mirroring — WARN only; Related/Sources/References exist
     # only on the English side by design, so exclude them before counting.
@@ -152,8 +184,11 @@ def main():
                     help='vault localization language; "en" skips translation checks')
     ap.add_argument("--vault", default=None,
                     help="vault path; enables TAXONOMY domain/tag checks")
+    ap.add_argument("--privacy-denylist", default="",
+                    help="comma-separated private identifiers to flag (usernames, real names)")
     args = ap.parse_args()
 
+    denylist = [t for t in args.privacy_denylist.split(",") if t.strip()]
     domains = tag_registry = vault = None
     if args.vault:
         vault = Path(args.vault).expanduser()
@@ -165,7 +200,7 @@ def main():
 
     failed = False
     for note in args.notes:
-        errs, warns = validate(note, args.language, domains, tag_registry, vault)
+        errs, warns = validate(note, args.language, domains, tag_registry, vault, denylist)
         if errs:
             failed = True
             print(f"FAIL {note}")

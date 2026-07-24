@@ -82,6 +82,49 @@ class ValidateCardTest(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn("not in TAXONOMY.md '## Tags' registry", r.stdout)
 
+    def test_scope_invalid_value_fails(self):
+        bad = GOOD.replace("status: raw", "status: raw\nscope: bogus")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("scope 'bogus' not in", r.stdout)
+
+    def test_scope_versioned_requires_last_verified(self):
+        bad = GOOD.replace("status: raw", "status: raw\nscope: versioned")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("requires a last_verified", r.stdout)
+
+    def test_scope_versioned_with_last_verified_passes(self):
+        ok = GOOD.replace("status: raw",
+                          "status: raw\nscope: versioned\nlast_verified: 2026-07-21")
+        r = run("validate_card.py", self.write_card(ok), "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_privacy_home_path_fails(self):
+        bad = GOOD.replace("## Goal\nX.", "## Goal\nRun /Users/alan/proj/x.py")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("real-looking username", r.stdout)
+
+    def test_privacy_placeholder_home_path_passes(self):
+        ok = GOOD.replace("## Goal\nX.", "## Goal\nRun /Users/<user>/proj/x.py")
+        r = run("validate_card.py", self.write_card(ok), "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_privacy_denylist_fails(self):
+        bad = GOOD.replace("## Goal\nX.", "## Goal\nCredit to alan here.")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault,
+                "--privacy-denylist", "alan")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("privacy denylist", r.stdout)
+
+    def test_empty_references_warns(self):
+        warn = GOOD.replace("## Related\n[[other-topic]]",
+                            "## References\n\n## Related\n[[other-topic]]")
+        r = run("validate_card.py", self.write_card(warn), "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("empty '## References'", r.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

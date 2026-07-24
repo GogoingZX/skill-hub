@@ -109,6 +109,45 @@ class ValidateNoteTest(unittest.TestCase):
             r = self.validate(staged)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+    def test_scope_versioned_requires_last_verified(self):
+        bad = GOOD.replace("spec_version: 1", "spec_version: 1\nscope: versioned")
+        r = self.validate(self.write_note(bad))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("requires a last_verified", r.stdout)
+
+    def test_privacy_home_path_fails(self):
+        bad = GOOD.replace("Body prose.", "See /Users/alan/notes/x.md")
+        r = self.validate(self.write_note(bad))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("real-looking username", r.stdout)
+
+    def test_absolute_title_warns_not_fails(self):
+        warn = GOOD.replace("# Good Note", "# Never Do This")
+        r = self.validate(self.write_note(warn))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("absolute word", r.stdout)
+
+    def test_empty_references_warns(self):
+        warn = GOOD.replace("1. https://example.org — what it covers", "")
+        r = self.validate(self.write_note(warn))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("empty '## References'", r.stdout)
+
+    def test_destructive_without_recovery_warns(self):
+        warn = GOOD.replace("Body prose.", "Run `git reset --hard origin/main`.")
+        r = self.validate(self.write_note(warn))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("destructive command", r.stdout)
+
+    def test_tail_section_order_warns(self):
+        warn = GOOD.replace(
+            "- conversation-claude/conversation-20260718.md (discussed)",
+            "- conversation-claude/conversation-20260718.md (discussed)\n\n"
+            "## Related\n\n[[other]]")
+        r = self.validate(self.write_note(warn))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("canonical order", r.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

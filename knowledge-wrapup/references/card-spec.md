@@ -10,6 +10,22 @@ Cards are for machine consumption — English-only, no translation section.
 
 - `topic` is the knowledge's unique identifier: lowercase kebab-case English,
   matching the curated note's filename. It is the dedupe anchor.
+- `topic` names the concept by ITS NAME, readable at a glance — never how it's
+  computed or implemented:
+  - Use the term people use for the concept: a plain phrase, or an established
+    named term (`bessel-correction`, `capm`, `oauth`). Never lead with — or
+    fall back to — an implementation detail: an API parameter, a formula
+    fragment, a symbol, or a spec number.
+    - ✗ `bessel-correction-and-ddof` (ddof = API parameter)
+    - ✗ `sample-variance-n-minus-1` (n-minus-1 = formula fragment)
+    - ✓ `bessel-correction-sample-variance` (named concept + subject)
+    - ✗ `pep-723-inline-script-metadata` (number leads)
+    - ✓ `python-inline-script-deps--pep723` (concept leads; number → `--<id>` suffix)
+  - The line: name = "what it's CALLED", not "how it's DONE".
+  - Test: scanning `notes/`, you know what the file is about from the name alone.
+  - Spec/standard numbers (PEP/RFC/CVE/ISO/W3C…) go as a `--<id>` suffix anchor,
+    never the head; most topics have no number → no suffix.
+  - Specific over vague: `choosing-a-package-installer`, not `packages`.
 - The date suffix allows the same topic to produce cards on different days
   (new sources, new information); integration merges them into the same note.
 - One card per topic per day. If a card for the same topic already exists with
@@ -19,7 +35,9 @@ Cards are for machine consumption — English-only, no translation section.
   snapshot: never edit it retroactively — presentation/style fixes go to the
   NOTE only; new information about the topic gets a new dated card (or the
   same-day flip-to-raw above). This keeps cards honest as "what was extracted
-  that day" and kills card/note drift maintenance.
+  that day" and kills card/note drift maintenance. **The one exception is a
+  privacy scrub**: removing a real identifier or private datum that must not
+  persist anywhere (see synthetic-data rule) may edit a frozen card in place.
 
 ## Frontmatter — all fields required, enums are closed
 
@@ -40,8 +58,41 @@ source_ref: "conversation-claude/conversation-20260705.md"  # path; for PDFs add
 confidence: verified               # verified (actually run/tested in session) | discussed
 date: 2026-07-05
 status: raw                        # raw | merged | dropped
+scope: versioned                   # (optional) universal | versioned | observed | policy
+last_verified: 2026-07-05          # (optional) required when scope is versioned/observed
 ---
 ```
+
+### Claim scope (optional, but set it on version-sensitive material)
+
+`scope` records what KIND of claim the card makes, so an absolute-sounding title
+is not mistaken for a universal law. It is optional — a judgment field: the
+validator checks it when present and warns on absolute titles, but does not
+require it (Level-2 enforcement, not a hard gate):
+
+- `universal` — holds regardless of tool version or environment; only for
+  genuinely general facts.
+- `versioned` — depends on a tool/product version; requires `last_verified`
+  (yyyy-MM-dd) and an in-body note of what it applies to.
+- `observed` — a single-environment or local reproduction; requires
+  `last_verified` and a minimal repro + environment; never titled as a universal
+  limit.
+- `policy` — this vault's own preference, not a claim about tool capability;
+  state the goal and the cost.
+
+The curated note carries the same `scope`/`last_verified` — it is the living
+version-anchor, since a merged card is frozen and cannot be re-verified.
+
+### Synthetic identifiers and private data (privacy red line)
+
+Cards and notes are treated as publishable: never carry a real local username,
+personal name, email, absolute home path (`/Users/<name>/…`), or real private
+specifics (trip destinations, dates, amounts) from the session. Replace them
+with synthetic, non-reversible stand-ins (`dev-a`, `try-new-parser`, seeded
+fixtures, `/Users/<user>/…`). When a topic needs concrete data, use a fixed-seed
+synthetic set and say so. The validator scans for home paths carrying a real
+username, non-example emails, and a configured denylist of your own identifiers
+(`--privacy-denylist`).
 
 ## Body — required sections by type
 
@@ -80,7 +131,13 @@ Section rules:
   one-line note on what it covers. **Never invent a URL.** Only include links
   that actually appeared in the conversation or canonical official domains you
   are certain of (e.g. git-scm.com, developer.mozilla.org). If uncertain, write
-  the resource name with "(search for this)" and no URL.
+  the resource name with "(search for this)" and no URL. An **empty**
+  `## References` heading is a defect — omit the section entirely, or write
+  `none — <why>` (a bare heading reads as an unfinished placeholder; the
+  validator warns on it).
+- **Tail-section order**: when present, the closing sections appear in the fixed
+  order **References → Related → Sources** (References is omitted when empty).
+  The validator warns on any other order.
 
 ## Completeness standard
 
@@ -91,6 +148,56 @@ comparisons. Compressing a rich discussion into a thin digest is a defect:
 brevity belongs to the diary's Summary field, not to cards or notes. When the
 source compared or enumerated things, keep the table; when it walked a
 process, keep every step.
+
+### Depth: teach, don't digest
+
+Where the source supports it, a `concept` / `term` / `howto` / `gotcha`
+**teaches** the topic — it does not just name conclusions:
+
+- the mechanism or *why*, not only the *what*;
+- a breakdown of the load-bearing terms, parameters, or flags — name each token
+  and say what it does;
+- a self-standing worked example with concrete, teaching-chosen values.
+
+Listing conclusions the reader must already understand in order to follow them is
+the shallow-digest failure — it fails the re-teach test above.
+
+**Destructive operations** take the strongest form of this. A command that can
+irreversibly lose data (`reset --hard`, `rm -rf`, `branch -D`, `gc --prune`,
+`push --force`, `DROP`, removing an inner `.git`, …) must never ship as a bare
+command — vault content is trusted and copy-pasted. Teach it in five parts:
+
+1. **Command breakdown** — the full command with every flag and argument
+   explained, naming the mode/variant it belongs to (`--hard` vs `--soft` /
+   `--mixed`).
+2. **When it applies** — the exact right situations, and the wrong ones, each with
+   the safer alternative.
+3. **Consequences** — precisely what is lost versus preserved.
+4. **Recovery** — written as if the command has ALREADY run and done its damage:
+   ordered, followable steps for each recoverable case, and an explicit list of
+   what is NOT recoverable.
+5. **Cautions** — the read-only preflight to run first, how to confirm the precise
+   target, and the traps.
+
+### Enrichment versus provenance
+
+A note can be no deeper than its source **unless** knowledge is added beyond the
+conversation. That is allowed — but never silently, and never disguised as
+session-verified fact:
+
+- **Faithful first.** Capture everything the source actually reached, at full
+  depth. Most thin notes fail here, not at enrichment: the source was rich and the
+  extraction digested it. Fix that before adding anything.
+- **Marked enrichment.** Knowledge added from the model to teach the topic fully
+  sets the card to `confidence: discussed` (a card carrying any claim not verified
+  in-session is never `verified`) and must carry a real `## References` entry
+  backing the added claims. Never inject unsourced material under
+  `source: conversation` + `confidence: verified`.
+- **Thin-source stub.** When even enrichment would be guesswork — no session basis
+  and no citable source — do not emit a confident shallow note. Write what is
+  actually known and mark the gap with a `> [!todo] thin source — deepen in a
+  future pass` callout, and flag it in the run report. Depth becomes a deliberate
+  follow-up, not a silent gap.
 
 ## Worked example — a good card
 

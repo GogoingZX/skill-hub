@@ -51,12 +51,19 @@ File-mode source rules (so the same input yields the same source set on any run)
 Read `~/.config/knowledge-wrapup/config.json`:
 
 ```json
-{ "vault_path": "~/Desktop/knowledge-base", "language": "zh-CN", "vault_name": "knowledge-base" }
+{ "vault_path": "~/Desktop/knowledge-base", "language": "zh-CN", "vault_name": "knowledge-base",
+  "privacy_denylist": ["<local-username>", "<real name>"] }
 ```
 
 `vault_name` (optional) is the vault's registered name in Obsidian, used by the
 CLI search in Step 3; when absent, default to the last path component of
 `vault_path`.
+
+`privacy_denylist` (optional) is the list of your own identifiers — local
+username, real name, email local-part — that must never appear in cards or
+notes; pass it as `--privacy-denylist "a,b,c"` to `validate_card.py` /
+`validate_note.py` so extractions carrying it fail the gate (card-spec:
+synthetic data).
 
 - **Config missing = first run.** Ask the user two questions: (1) where should the
   knowledge base live (absolute path), (2) localization language (`en` means
@@ -156,10 +163,18 @@ include only links that actually appeared in the conversation or canonical
 official domains you are certain of; otherwise give the resource name with a
 "(search for this)" note and no URL.
 
+**Teach, don't digest.** Depth (mechanism + parameter/flag breakdown +
+self-standing example), the five-part form for destructive commands, and the
+enrichment-vs-provenance policy (knowledge added beyond the source is marked
+`confidence: discussed` and cited; a source too thin for faithful capture or
+citable enrichment yields a `> [!todo] thin source` stub, not a confident shallow
+note) are specified in `references/card-spec.md` — they are gates, not style.
+
 Then validate every card — this is a hard gate, not a formality:
 
 ```bash
-python3 scripts/validate_card.py <card-file>... --vault <vault_path>
+python3 scripts/validate_card.py <card-file>... --vault <vault_path> \
+    --privacy-denylist "<config privacy_denylist>"
 ```
 
 Fix and re-validate until clean. A card that fails validation must not proceed
@@ -196,8 +211,9 @@ TAXONOMY/INDEX maintenance. In brief:
    flip integrated cards to `status: merged`.
 5b. Lint every note you created or touched:
    `python3 scripts/validate_note.py <note>... --language <config language>
-   --vault <vault_path>` — a failing note blocks completion (fix and
-   re-lint), same hard-gate status as card validation.
+   --vault <vault_path> --privacy-denylist "<config privacy_denylist>"` —
+   a failing note blocks completion (fix and re-lint), same hard-gate status
+   as card validation.
 6. Notes and diary get a translation section when `language` is not `en`;
    cards never do.
 7. **The user's manual edits are first-class.** Merge into their structure as

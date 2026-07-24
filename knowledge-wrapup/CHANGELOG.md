@@ -9,6 +9,66 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.12.0] — 2026-07-21
+
+### Added
+- Privacy gate (A1): `check_privacy` in `validate_card.py`, shared with
+  `validate_note.py`. Flags absolute home paths carrying a real-looking username
+  (`/Users/<name>/…`, placeholders exempt) and a configurable
+  `--privacy-denylist` of the user's own identifiers as errors; non-example
+  emails as warnings. `card-spec.md` gains the "synthetic identifiers and private
+  data" rule; SKILL.md Step 0 gains an optional `privacy_denylist` config key,
+  passed to both validators in Steps 4 and 5b.
+- Claim-scope field (A2): optional `scope` (`universal | versioned | observed |
+  policy`) with conditional `last_verified`, validated by `check_scope` when
+  present (never required — a judgment field, Level-2 enforcement, so no
+  spec_version bump and no migration of existing cards/notes). `validate_note.py`
+  additionally warns on absolute-word titles (Never/Always/Cannot/Nothing/Every)
+  unless `scope: universal`. Documented in `card-spec.md`.
+- References policy (A3): a present-but-empty `## References` heading warns
+  (`check_references`, shared) — omit it or write `none — <why>`. Tail-section
+  order pinned **References → Related → Sources** (A4); `validate_note.py` warns
+  on any other order. Destructive-command heuristic: a note whose body has a
+  destructive command (`reset --hard`, `rm -rf`, `branch -D`, `gc --prune`,
+  `push --force`, `DROP`, …) but lacks both recovery and preflight language warns
+  to apply the five-part form. All documented in `card-spec.md`.
+- Tests: 13 new cases (scope enum, versioned-needs-last_verified, privacy home
+  path / placeholder-exempt / denylist, absolute-title, empty-references,
+  destructive-without-recovery, tail-order) — suite 34 → 47.
+
+## [1.11.0] — 2026-07-21
+
+### Added
+- Depth standard in `references/card-spec.md` ("teach, don't digest"): where the
+  source supports it, concept/term/howto/gotcha notes give the mechanism (not only
+  the *what*), a breakdown of the load-bearing terms/parameters/flags, and a
+  self-standing worked example; listing conclusions the reader must already
+  understand is the shallow-digest failure of the re-teach test.
+- Five-part form for **destructive operations** (`reset --hard`, `rm -rf`,
+  `branch -D`, `gc --prune`, `push --force`, `DROP`, removing an inner `.git`, …):
+  command breakdown → when it applies (+ safer alternative) → consequences →
+  recovery written as if already executed (followable steps + what is NOT
+  recoverable) → cautions. A bare destructive command fails the completeness
+  standard.
+- Enrichment-vs-provenance policy: a note is no deeper than its source unless
+  knowledge is added beyond the conversation; added knowledge sets the card to
+  `confidence: discussed` (never `verified`) and must carry a real reference; a
+  source too thin for faithful capture or citable enrichment yields a
+  `> [!todo] thin source` stub plus a report flag, not a confident shallow note.
+  SKILL.md Step 4 points to these as gates. (Validator enforcement of the
+  destructive-command heuristic lands with the pending validator pass.)
+
+## [1.10.0] — 2026-07-20
+
+### Added
+- `topic` naming rule in `references/card-spec.md`: name the concept by ITS
+  NAME (`bessel-correction-sample-variance`), never by an implementation
+  detail — an API parameter, formula fragment, symbol, or spec number
+  (`ddof`, `n-minus-1`, `pep-723-…` leading). Spec/standard numbers go as a
+  `--<id>` suffix anchor, never the head; most topics have no number and take
+  no suffix. Fixes glance-unreadable filenames (the line: name = "what it's
+  CALLED", not "how it's DONE").
+
 ## [1.9.0] — 2026-07-19
 
 Implements the accepted findings of
