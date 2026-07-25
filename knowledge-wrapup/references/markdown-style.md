@@ -26,11 +26,15 @@ matters, unordered (`-`) when it doesn't. Substitute characters are FORBIDDEN
 as list markers: ①②③…⑳, ⑴⑵⑶, •, ●, ▪, ➀, Ⅰ/Ⅱ/Ⅲ, full-width digits.
 They render inconsistently, defeat search, and are hostile to screen readers.
 
-**U2 — Soft-wrap constrains paragraphs, never structure.** "One paragraph =
-one physical line, never hard-wrap" applies INSIDE a paragraph. It is not a
-license to fold a list into a paragraph: one list item = one line, blank-line
-separation between blocks stays. (This mis-generalization was the root cause
-of the 2026-07-16 defects.)
+**U2 — Soft-wrap all prose; wrapping constrains paragraphs, never structure.**
+One paragraph / bullet / callout line = one physical line, English and CJK
+alike — never hard-wrap at a fixed column: a mid-sentence newline corrupts CJK
+(it renders as a stray space), and English hard breaks do not reflow to the
+window in Obsidian's Live Preview / Source view. Code blocks, tables, and
+headings keep their own line structure. This is not a license to fold a list
+into a paragraph: one list item = one line, blank-line separation between
+blocks stays. (That mis-generalization was the root cause of the 2026-07-16
+defects.)
 
 **U3 — Representation by content kind.** Comparisons and enumerable facts →
 tables. Processes, decision trees, architectures → Mermaid (≤10 nodes, label

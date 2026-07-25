@@ -17,8 +17,10 @@ writes go to a scratch copy; any write outside it fails the eval.
    `["alan"]` for the run (a deterministic stand-in for a real denylist —
    conversation A deliberately contains a personal name in an example). Do not
    read or modify `~/.config/knowledge-wrapup/config.json` or the real vault.
-   Pin file-mode provenance: `source: note`, `source_ref` = the transcript path
-   as given.
+   Pin file-mode provenance per the file-mode source rules: copy the transcript
+   into `<scratch>/sources/` and use `source: note`,
+   `source_ref: "sources/conversation-a.md"` (vault-relative — an absolute path
+   trips the privacy gate; a repo-relative one breaks check_provenance).
 3. Check every assertion in `expected-conversation-a.md`.
 4. On the SAME scratch vault, run the skill on `evals/conversation-b.md`, then
    check `expected-conversation-b.md`.

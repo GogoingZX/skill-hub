@@ -9,6 +9,33 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.14.0] — 2026-07-25
+
+### Added
+- File-mode provenance form pinned (closes the ambiguity surfaced by the
+  2026-07-25 eval run, the first under the v1.12.0 privacy gate): extracted
+  sources are copied into `<vault>/sources/` and `source_ref` is
+  vault-relative (`sources/<file>`) — an absolute path trips the privacy
+  gate, a repo-relative one breaks `check_provenance.py`; the in-vault copy
+  is the only form satisfying both. evals/README step 2 pinned to match.
+- Same-day re-integration guard (card-spec): re-integrating an extended card
+  applies only the NEW material to the note; re-appending previously merged
+  content is a defect.
+- Step 4b states explicitly that Step 5 runs once per card (INDEX update and
+  merged flip included — no end-of-run batching); note template gains the
+  missing `## Related` section (canonical tail order References → Related →
+  Sources).
+
+### Changed
+- Dedup pass per the README one-canonical-home rule — five full restatements
+  reduced to one-line summaries plus pointers: diary file-missing semantics
+  (canonical: integration-rules), soft-wrap rule (canonical: markdown-style
+  U2, which now carries the full statement and rationale), never-invent-URL
+  (canonical: card-spec), evidence ordering (canonical: integration-rules),
+  duplicate-vs-corroboration (canonical: integration-rules). The freed lines
+  offset the new file-mode/per-card rules, keeping SKILL.md size flat
+  (288 → 292 lines) despite three added behaviors.
+
 ## [1.13.0] — 2026-07-24
 
 ### Added

@@ -167,8 +167,9 @@ Append-only. Never modify existing sections, even to fix formatting. The one
 exception is a **privacy scrub** (card-spec: synthetic identifiers): removing a
 real identifier or private datum that must not persist may edit existing diary
 content in place — the minimal substitution only, nothing else rewritten, and
-the scrub is announced in the run report. If today's
-file is missing, create it fresh and mention that in the report.
+the scrub is announced in the run report. If today's file is missing — even if
+it existed earlier today — create it fresh with just the new section, mention
+that in the report, and do not attempt recovery.
 
 ## Presentation rules (notes and diary)
 
@@ -204,14 +205,8 @@ Full typography rules live in `markdown-style.md` (binding); highlights:
    `> [!summary]` — one-liner at the top of every note and every diary topic;
    `> [!warning]` — pitfalls and gotchas. Use sparingly; two per document is
    usually plenty.
-7. **Soft-wrap all prose — one paragraph/bullet = one physical line, for BOTH
-   English and CJK.** Do not hard-wrap prose at a fixed column. Two reasons:
-   (a) for CJK, a mid-sentence newline renders as a stray space and corrupts
-   the text; (b) even for English, hard breaks do NOT reflow to the window
-   width in Obsidian's Live Preview / Source view, so the text can't adapt to
-   the reader's pane. Let the editor soft-wrap. This applies to paragraphs,
-   list-item bodies, and callout content alike. (Code blocks, tables, and
-   headings are unaffected — they keep their own line structure.)
+7. **Soft-wrap all prose** — one paragraph/bullet/callout = one physical line,
+   for both English and CJK; full rule and rationale in markdown-style U2.
 8. **No duplicate H1s.** The translation section's title is a bold line, its
    section headings are H3 — the document outline stays clean.
 9. **Separate diary topics with `---` rules** so each topic reads as a card.

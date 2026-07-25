@@ -42,7 +42,13 @@ File-mode source rules (so the same input yields the same source set on any run)
   and symlinks are skipped.
 - Unreadable or failed files are explicit warnings in the report, never silent
   skips.
-- PDF provenance carries a page locator (`source_ref: "guide.pdf#p12"`);
+- **Provenance paths are vault-relative.** Copy each extracted source into
+  `<vault>/sources/` (create the directory if missing, keep the filename) and
+  point `source_ref` at that copy (`sources/<file>`). An absolute path would
+  trip the privacy gate, and a path outside the vault breaks
+  `check_provenance.py` — the in-vault copy is the only form that satisfies
+  both, and it keeps provenance valid if the original file later moves.
+- PDF provenance carries a page locator (`source_ref: "sources/guide.pdf#p12"`);
   scanned (image-only) or encrypted PDFs are reported as unsupported rather
   than half-extracted.
 
@@ -141,11 +147,9 @@ Classify the candidate's relation to the vault — exactly one of four:
 | **supplements** | new information, no contradiction | append to the existing note, cite source |
 | **conflicts** | contradicts the existing note | record both claims, never silently overwrite |
 
-Running the skill twice on the same conversation is safe by construction — but
-a replayed source is a **duplicate, not corroboration**: if the note's Sources
-already list the same `source_ref`, skip the candidate entirely (no source line,
-no diary append) and say so in the report. `corroborates` is reserved for an
-*independent* source that agrees (details in `references/integration-rules.md`).
+Running the skill twice on the same conversation is safe by construction — a
+replayed `source_ref` is a **duplicate, not corroboration**: skip it and say so
+in the report (full rule in `references/integration-rules.md`).
 
 ## Step 4 — Write cards
 
@@ -157,11 +161,9 @@ All output typography (lists, characters, Mermaid labels, math, bilingual
 structure) follows `references/markdown-style.md` — its machine-checkable
 subset is enforced by the validator below.
 
-Cards are English-only. External links go in the card's `## References` section —
-official docs and high-quality tutorials, 0–3 per card. **Never invent a URL**:
-include only links that actually appeared in the conversation or canonical
-official domains you are certain of; otherwise give the resource name with a
-"(search for this)" note and no URL.
+Cards are English-only. External links go in the card's `## References` section
+(0–3, ordered, annotated) — **never invent a URL**; full policy in
+`references/card-spec.md`.
 
 **Teach, don't digest.** Depth (mechanism + parameter/flag breakdown +
 self-standing example), the five-part form for destructive commands, and the
@@ -184,7 +186,9 @@ to integration.
 
 For each surviving candidate, complete the full unit before starting the
 next: write the card → validate it → integrate its note (Step 5) → lint the
-note. Do NOT write all cards first and all notes afterwards — on large runs
+note. Step 5 runs once per card as part of that unit — its INDEX update and
+the flip to `status: merged` included, nothing deferred to an end-of-run
+batch. Do NOT write all cards first and all notes afterwards — on large runs
 quality decays at the tail of each batch (observed 2026-07-16: translation
 defects concentrated in the later notes of a 14-card batched run). After a
 run of more than ~8 cards, additionally re-read the LAST THIRD of the
@@ -208,7 +212,7 @@ TAXONOMY/INDEX maintenance. In brief:
 5. Update `INDEX.md` — one line per note, via
    `scripts/update_index.py --vault … --note … --title … --summary …`
    (idempotent: refreshes an existing line instead of duplicating) — and
-   flip integrated cards to `status: merged`.
+   flip the integrated card to `status: merged`.
 6. Lint every note you created or touched:
    `python3 scripts/validate_note.py <note>... --language <config language>
    --vault <vault_path> --privacy-denylist "<config privacy_denylist>"` —
@@ -240,8 +244,8 @@ Card), exact format and presentation rules (tables, Mermaid diagrams) in
 - **Rerun guard.** If today's diary already contains a section for this same
   session (same topics from the same conversation — e.g. the skill was rerun),
   skip the append and say so in the report instead of recording the session twice.
-- File missing (even if it existed earlier today)? Create it fresh with just this
-  section and mention that in the report. Do not attempt recovery.
+- File missing? Create fresh, never attempt recovery — details in
+  `references/integration-rules.md`.
 
 ## Step 6 — Report
 
@@ -274,9 +278,9 @@ End with a summary in the chat, containing:
   settings, never touch the user's source files.
 - The skill owns: new cards, card `status` flips, its own appends to notes/INDEX/
   TAXONOMY/diary. Everything else in the vault belongs to the user.
-- Conflicting knowledge is surfaced, never adjudicated silently. When ordering
-  evidence, prefer: verified-by-running > official docs/PDF > conversation
-  discussion > unverified notes — but the user is the final judge.
+- Conflicting knowledge is surfaced, never adjudicated silently; evidence
+  ordering and the conflict format live in `references/integration-rules.md` —
+  the user is the final judge.
 - All generated English is written first and completely; translation (if enabled)
   is done afterwards as a whole, natural and idiomatic, never literal. Details in
   `references/integration-rules.md`.

@@ -30,7 +30,9 @@ Cards are for machine consumption — English-only, no translation section.
   (new sources, new information); integration merges them into the same note.
 - One card per topic per day. If a card for the same topic already exists with
   today's date, extend that card (flip it back to `status: raw`, re-validate,
-  re-integrate) instead of inventing a second filename.
+  re-integrate) instead of inventing a second filename. Re-integration applies
+  only the card's NEW material to the note — the previously merged content is
+  already there, and re-appending it is a defect.
 - **Merged cards are frozen.** Once `status: merged`, a card is a provenance
   snapshot: never edit it retroactively — presentation/style fixes go to the
   NOTE only; new information about the topic gets a new dated card (or the

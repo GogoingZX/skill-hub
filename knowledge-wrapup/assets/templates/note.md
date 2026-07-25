@@ -21,6 +21,10 @@ bullet / callout line = one physical line — never hard-wrap at a fixed column
 
 1. {[Title](url)} — {one-line annotation}
 
+## Related
+
+{[[wikilinks]] from the card — tail order is References → Related → Sources}
+
 ## Sources
 
 - {source_ref} ({confidence})
