@@ -1,11 +1,16 @@
 # TODO — deferred improvements (revisit after a few runs)
 
-1. **Card `source_ref` is single-valued** (found by the 2026-07-19 eval run):
-   when the same-day rule extends an existing card with content from a SECOND
-   source, the card keeps only its creation source — the second source's
-   provenance lives solely in the note's Sources section. Acceptable (notes
-   are the product), but if card-level provenance ever matters, this needs a
-   multi-source field and a spec_version bump. Decide only when it bites.
+Done (2026-07-25): resolved the source_ref-single-valued item (below,
+superseded) by removing card-level same-day extension entirely instead of
+adding a multi-source field. Every extraction is now a new card file, never a
+re-opened one; a same-day same-topic collision gets a disambiguating filename
+suffix (`{topic}--{yyyyMMdd}-2.md`). Each card's single `source_ref` is now
+always accurate — the ambiguity the deferred item worried about can no longer
+occur, and no spec_version bump or schema change was needed. Superseded item,
+kept for context: "Card `source_ref` is single-valued (found by the
+2026-07-19 eval run): when the same-day rule extends an existing card with
+content from a SECOND source, the card keeps only its creation source — the
+second source's provenance lives solely in the note's Sources section."
 
 Done (2026-07-19): eval protocol executed end-to-end for the first time
 (A → B → B-replay on a scratch vault): all assertions in both expected-*

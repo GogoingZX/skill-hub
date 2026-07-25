@@ -120,9 +120,11 @@ conversation yields 0–5 cards.
 
 ## Step 3 — Dedupe against the vault
 
-First list today's already-written cards (`ls <vault_path>/cards/*--{yyyyMMdd}.md`)
-so a same-day sibling session's extractions are visible upfront instead of being
-discovered as collisions card-by-card.
+First list today's already-written cards (`ls <vault_path>/cards/*--{yyyyMMdd}*.md`)
+so a same-day sibling session's extractions are visible upfront — this tells you
+which topics already have a card today, so a same-topic candidate gets a new,
+disambiguated card file (card-spec: file naming) instead of a collision
+discovered card-by-card.
 
 Then, for each surviving candidate, search existing notes (scope: `notes/` only —
 never match against `cards/`):

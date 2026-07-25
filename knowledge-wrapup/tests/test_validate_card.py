@@ -76,6 +76,18 @@ class ValidateCardTest(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn("forbidden list-substitute character", r.stdout)
 
+    def test_forbidden_dingbat_digit_fails(self):
+        bad = GOOD.replace("## Goal\nX.", "## Goal\n➀ first ➁ second")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("forbidden list-substitute character", r.stdout)
+
+    def test_forbidden_fullwidth_digit_fails(self):
+        bad = GOOD.replace("## Goal\nX.", "## Goal\n１. first ２. second")
+        r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("forbidden list-substitute character", r.stdout)
+
     def test_unregistered_tag_fails(self):
         bad = GOOD.replace("tags: [git, best-practice]", "tags: [notatag]")
         r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
@@ -151,6 +163,22 @@ class ValidateCardTest(unittest.TestCase):
         r = run("validate_card.py", self.write_card(bad), "--vault", self.vault)
         self.assertEqual(r.returncode, 1)
         self.assertIn("kebab-case", r.stdout)
+
+    def test_same_day_sibling_disambiguator_passes(self):
+        # card-spec: every extraction is a new card, never a re-opened one —
+        # a second same-day same-topic card gets a '-<n>' filename suffix.
+        r = run("validate_card.py",
+                self.write_card(GOOD, "good-card--20260718-2.md"),
+                "--vault", self.vault)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_filename_disambiguator_on_wrong_topic_fails(self):
+        bad = GOOD.replace("topic: good-card", "topic: other-card")
+        r = run("validate_card.py",
+                self.write_card(bad, "good-card--20260718-2.md"),
+                "--vault", self.vault)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("does not match topic+date", r.stdout)
 
     def test_merged_card_warnings_suppressed(self):
         warn = GOOD.replace("## Related\n[[other-topic]]",

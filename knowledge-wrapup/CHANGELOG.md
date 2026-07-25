@@ -9,6 +9,64 @@ MINOR: adds behavior rules, PATCH: wording/fix only.
 > ("date + period") because exact times were not recorded. From v1.4.0 on,
 > git history is the precise source of truth.
 
+## [1.16.0] — 2026-07-25
+
+### Changed
+- **Removed card-level same-day extension** (user design discussion,
+  2026-07-25): a card is now never edited after creation, not even same-day.
+  Previously, a second same-day extraction on the same topic would flip the
+  existing merged card back to `raw` and absorb the new content — which left
+  `source_ref` (single-valued) silently misattributing part of the card to
+  the wrong source. Now every extraction always gets its own new card file;
+  a same-day same-topic collision gets a disambiguating filename suffix
+  (`{topic}--{yyyyMMdd}-2.md`, `-3.md`, ...). Each card's one `source_ref` is
+  therefore always accurate by construction — no multi-source field needed,
+  no spec_version bump. `status: merged` is now a true terminal state (no
+  re-arming case at all; the sole post-creation edit path remains the privacy
+  scrub, which never touches status). Rationale: cards exist to be a bounded,
+  dated, immutable extraction/validation unit distinct from the note's
+  unbounded living accumulation — letting a card be reopened, even within a
+  day, eroded that distinction and was the direct cause of the source_ref
+  ambiguity this change removes. Resolves the TODO.md deferred item.
+- `validate_card.py`: `FILENAME_RE` and the topic+date consistency check now
+  accept the optional `-<n>` disambiguator; SKILL.md Step 3's same-day
+  sibling-listing glob widened to surface disambiguated siblings too;
+  card-spec.md file-naming section rewritten accordingly.
+- `evals/expected-conversation-b.md` updated: conversation B's idempotency
+  content now expects its own `idempotency--{run-date}-2.md` card (merged
+  into the note via a second, independent supplements-relation pass) instead
+  of extending A's card.
+- Tests 59 → 61 (same-day disambiguated filename passes; wrong-topic
+  disambiguated filename still fails topic+date consistency).
+
+### Note
+- The 2026-07-25 eval run (v1.15.0 verification) predates this change and
+  exercised the now-removed same-day-extension path — it is not a valid
+  regression run for this behavior. A fresh eval pass is recommended before
+  relying on this rule in production.
+
+## [1.15.0] — 2026-07-25
+
+### Fixed
+- Diary worked example in `references/integration-rules.md` rewritten to the
+  form the template and validator actually require (`> [!summary]` callout
+  per topic, bullet-list Details) — the old bold-label prose form would fail
+  `validate_diary.py`'s hard gate if followed verbatim.
+- `card-spec.md`'s own `validate_card.py` example was missing
+  `--privacy-denylist`, unlike every other invocation in the repo (SKILL.md,
+  evals/README) — copying it verbatim silently disabled the identifier check.
+- `CHAR_BLACKLIST_RE` broadened to match what U1 / the machine-checkable
+  subset section actually document: dingbat circled digits (`➀-➉`) and
+  full-width digits (`０-９`) were named as forbidden but not enforced.
+- `check_provenance.py` docstring pointed at a nonexistent "SKILL.md Step
+  6.5" — corrected to "Step 6, item 5".
+
+### Added
+- Tests for the U7 structure-mirroring warnings in `validate_note.py`
+  (ordered-list and table count mismatch/match) and for the broadened
+  char-blacklist characters — this logic had zero coverage before. Tests
+  54 → 59.
+
 ## [1.14.0] — 2026-07-25
 
 ### Added

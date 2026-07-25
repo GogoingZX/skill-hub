@@ -134,11 +134,14 @@ Instantiate `assets/templates/diary-section.md`:
 
 ### Topic: Obsidian CLI (verified)
 
-**Summary:** Official CLI since 1.12; ~100 commands; verified locally.
+> [!summary]
+> Official CLI since 1.12; ~100 commands; verified locally.
 
-**Details:** Best where vault awareness matters — search for dedupe,
-unresolved/orphans for graph maintenance. Example:
-`obsidian vault="kb" search query="prompt caching"`.
+**Details**
+
+- Best where vault awareness matters — search for dedupe, unresolved/orphans
+  for graph maintenance.
+- Example: `obsidian vault="kb" search query="prompt caching"`.
 
 **Open items:** [omit line if none]
 
@@ -148,7 +151,12 @@ unresolved/orphans for graph maintenance. Example:
 
 **Card:** [[obsidian-cli]]
 
-**中文:** [natural translation of Summary + Details]
+**中文**
+
+> [!summary]
+> [mirrors the summary callout]
+
+- [mirrors each Details bullet]
 ```
 
 Per-topic fields: Summary (1–2 sentences) → Details → Open items (omit if

@@ -28,18 +28,25 @@ Cards are for machine consumption — English-only, no translation section.
   - Specific over vague: `choosing-a-package-installer`, not `packages`.
 - The date suffix allows the same topic to produce cards on different days
   (new sources, new information); integration merges them into the same note.
-- One card per topic per day. If a card for the same topic already exists with
-  today's date, extend that card (flip it back to `status: raw`, re-validate,
-  re-integrate) instead of inventing a second filename. Re-integration applies
-  only the card's NEW material to the note — the previously merged content is
-  already there, and re-appending it is a defect.
-- **Merged cards are frozen.** Once `status: merged`, a card is a provenance
-  snapshot: never edit it retroactively — presentation/style fixes go to the
-  NOTE only; new information about the topic gets a new dated card (or the
-  same-day flip-to-raw above). This keeps cards honest as "what was extracted
-  that day" and kills card/note drift maintenance. **The one exception is a
-  privacy scrub**: removing a real identifier or private datum that must not
-  persist anywhere (see synthetic-data rule) may edit a frozen card in place.
+- **Every extraction is a new card file — cards are never edited after
+  creation, not even same-day.** If a candidate on the same topic surfaces
+  again later the same day (a second source, a sibling session), it gets its
+  own card with a disambiguating suffix: `{topic}--{yyyyMMdd}-2.md`, `-3.md`,
+  and so on (the day's first card carries no suffix). Step 3's same-day
+  sibling listing is what tells you whether a suffix is needed — it does not
+  need to be sequentially exact, only non-colliding. Because each card always
+  has exactly one `source_ref`, provenance stays accurate by construction:
+  there is no case where a card's declared source undercounts what it
+  actually drew on.
+- **Merged cards are frozen — permanently.** Once `status: merged`, a card is
+  a provenance snapshot: never edit it retroactively — presentation/style
+  fixes go to the NOTE only; new information about the topic, on any day,
+  gets its own new card. This keeps cards honest as "exactly what was
+  extracted, from exactly one source, at this moment" and kills card/note
+  drift maintenance. **The one exception is a privacy scrub**: removing a
+  real identifier or private datum that must not persist anywhere (see
+  synthetic-data rule) may edit a frozen card in place — status stays
+  `merged`; this is the only permitted post-creation edit of any kind.
 
 ## Frontmatter — enums are closed; fields required unless marked optional
 
@@ -279,7 +286,8 @@ They answer different questions, so they must not overlap:
 Every card must pass before integration:
 
 ```bash
-python3 scripts/validate_card.py <card>... --vault <vault_path>
+python3 scripts/validate_card.py <card>... --vault <vault_path> \
+    --privacy-denylist "<config privacy_denylist>"
 ```
 
 Checks: filename pattern, frontmatter completeness, enum values, topic/filename

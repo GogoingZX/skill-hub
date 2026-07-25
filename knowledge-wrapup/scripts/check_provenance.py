@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Verify that every provenance reference in the vault points at a file
-that still exists (SKILL.md Step 6.5 — report-only by default).
+that still exists (SKILL.md Step 6, item 5 — report-only by default).
 
 Scans:
 - cards/*.md frontmatter `source_ref:` values;

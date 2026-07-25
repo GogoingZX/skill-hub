@@ -157,6 +157,34 @@ class ValidateNoteTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("canonical order", r.stdout)
 
+    def test_u7_mirror_list_count_mismatch_warns(self):
+        warn = GOOD.replace(
+            "Body prose.", "Body prose.\n\n1. First step.\n2. Second step.")
+        r = self.validate(self.write_note(warn))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("U7 mirror: ordered-list items EN=2 vs translation=0", r.stdout)
+
+    def test_u7_mirror_list_count_match_passes_clean(self):
+        ok = GOOD.replace(
+            "Body prose.", "Body prose.\n\n1. First step.\n2. Second step."
+        ).replace("正文。", "正文。\n\n1. 第一步。\n2. 第二步。")
+        r = self.validate(self.write_note(ok))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertNotIn("U7 mirror", r.stdout)
+
+    def test_u7_mirror_table_count_mismatch_warns(self):
+        # the check only fires when the translation has >=1 table (a
+        # translation with zero tables is not compared, by design) —
+        # so use two EN tables against one ZH table to trigger it.
+        warn = GOOD.replace(
+            "Body prose.",
+            "Body prose.\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n"
+            "| C | D |\n|---|---|\n| 3 | 4 |"
+        ).replace("正文。", "正文。\n\n| 甲 | 乙 |\n|---|---|\n| 1 | 2 |")
+        r = self.validate(self.write_note(warn))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("U7 mirror: tables EN=2 vs translation=1", r.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

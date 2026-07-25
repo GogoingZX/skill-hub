@@ -16,8 +16,11 @@ from pathlib import Path
 
 SPEC_VERSION = "1"
 # A topic may carry one optional '--<id>' suffix anchor (card-spec: spec/standard
-# numbers, e.g. python-inline-script-deps--pep723); tags may not.
-FILENAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:--[a-z0-9]+)?--\d{8}\.md$")
+# numbers, e.g. python-inline-script-deps--pep723); tags may not. A same-day
+# sibling card (card-spec: file naming — every extraction is a new card, never
+# an edit) may carry a trailing '-<n>' disambiguator before '.md', n >= 2.
+FILENAME_RE = re.compile(
+    r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:--[a-z0-9]+)?--\d{8}(?:-\d+)?\.md$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 TOPIC_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:--[a-z0-9]+)?$")
 
@@ -145,8 +148,11 @@ def validate(card_path, domains, tag_registry, denylist=None):
         except ValueError:
             errors.append(f"date '{fm['date']}' is not a real calendar date")
         expected = f"{fm['topic']}--{fm['date'].replace('-', '')}.md"
-        if FILENAME_RE.match(p.name) and p.name != expected:
-            errors.append(f"filename '{p.name}' does not match topic+date ('{expected}')")
+        expected_stem = expected[:-3]  # strip '.md' for the disambiguator check
+        same_day_sibling = re.match(re.escape(expected_stem) + r"-\d+\.md$", p.name)
+        if FILENAME_RE.match(p.name) and p.name != expected and not same_day_sibling:
+            errors.append(f"filename '{p.name}' does not match topic+date "
+                          f"('{expected}', optionally '{expected_stem}-<n>.md')")
 
     tags = parse_tags(fm["tags"])
     if tags is None:
@@ -200,15 +206,18 @@ def validate(card_path, domains, tag_registry, denylist=None):
     if fm["status"] == "merged":
         # Frozen provenance snapshots (card-spec: freeze rule) may not be edited
         # to act on advisory warnings — suppressing them keeps audit output
-        # signal-bearing. Errors (structure, enums, privacy) still apply; a
-        # same-day flip back to 'raw' re-arms the warnings.
+        # signal-bearing. Errors (structure, enums, privacy) still apply.
+        # 'merged' is terminal (card-spec: every extraction is a new card,
+        # never a re-opened one) — the sole edit path is an in-place privacy
+        # scrub, which does not change status.
         warnings = []
     return errors, warnings
 
 
 # --- markdown-style.md machine checks (U1/U2/U4) ---------------------------
-# ①-⑳ (U+2460-2473), ⑴-⒇ (U+2474-2487), Ⅰ-Ⅻ (U+2160-216B), bullet glyphs.
-CHAR_BLACKLIST_RE = re.compile(r"[①-⒇Ⅰ-Ⅻ•●▪◦]")
+# ①-⑳ (U+2460-2473), ⑴-⒇ (U+2474-2487), ➀-➉ (U+2780-2789), Ⅰ-Ⅻ (U+2160-216B),
+# full-width digits (U+FF10-FF19), bullet glyphs.
+CHAR_BLACKLIST_RE = re.compile(r"[①-⒇➀-➉Ⅰ-Ⅻ０-９•●▪◦]")
 FENCE_RE = re.compile(r"```.*?```", flags=re.DOTALL)
 # an enumeration marker: 1-2 digits + . 、 ) followed by space/CJK/bold —
 # the lookbehind keeps decimals like "2.5" and ratios like "4/4、" from matching.

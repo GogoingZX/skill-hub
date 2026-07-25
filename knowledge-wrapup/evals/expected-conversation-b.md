@@ -32,9 +32,13 @@ Run in file mode against the SAME scratch vault, after conversation A.
 
 ## Same-day card rule (when B runs on the same date as A)
 
-- [ ] B's idempotency content extends the EXISTING
-      `idempotency--{run-date}.md` card (flip to `status: raw`, re-validate,
-      re-integrate) — no second filename for the same topic and date.
+- [ ] B's idempotency content gets its OWN new card file,
+      `idempotency--{run-date}-2.md` — the existing `idempotency--{run-date}.md`
+      from A is never re-opened or edited (card-spec: every extraction is a
+      new card). Each card's `source_ref` names exactly one source: A's card
+      points only at conversation-a, B's card points only at conversation-b.
+- [ ] Both idempotency cards reach `status: merged` independently; the note
+      accumulates both via two separate supplements-relation merges, not one.
 
 ## Index and validation
 
